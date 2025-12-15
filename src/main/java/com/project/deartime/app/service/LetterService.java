@@ -55,19 +55,17 @@ public class LetterService {
         if (requestedThemeCode != null) {
             Optional<LetterTheme> themeOptional = letterThemeRepository.findByCode(requestedThemeCode);
 
-            if (themeOptional.isEmpty()) {
-                warningMessage = String.format("요청하신 테마 코드 '%s'를 찾을 수 없어 'DEFAULT' 테마로 대체하여 저장됩니다.", requestedThemeCode);
-                requestedThemeCode = "DEFAULT";
-            } else {
+            if (themeOptional.isPresent()) {
                 theme = themeOptional.get();
+            } else {
+                warningMessage = String.format("요청하신 테마 코드 '%s'를 찾을 수 없어 'DEFAULT' 테마로 대체하여 저장됩니다.", requestedThemeCode);
             }
         } else {
             warningMessage = "테마를 지정하지 않아 'DEFAULT' 테마로 저장됩니다.";
-            requestedThemeCode = "DEFAULT";
         }
 
-        if (theme == null && "DEFAULT".equals(requestedThemeCode)) {
-            theme = letterThemeRepository.findByCode(requestedThemeCode)
+        if (theme == null) {
+            theme = letterThemeRepository.findByCode("DEFAULT")
                     .orElseThrow(() -> new EntityNotFoundException("기본 테마(DEFAULT)를 찾을 수 없습니다. DB를 확인해주세요."));
         }
 
@@ -191,7 +189,7 @@ public class LetterService {
 
         if (letter.getSender().getId().equals(currentUserId)) {
             letter.softDeleteBySender();
-        } else if (letter.getReceiver().getId().equals(currentUserId)) {
+        } else {
             letter.softDeleteByReceiver();
         }
 
