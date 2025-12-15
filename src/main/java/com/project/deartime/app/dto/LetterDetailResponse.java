@@ -6,7 +6,9 @@ import java.time.LocalDateTime;
 
 public record LetterDetailResponse(
         Long letterId,
+        Long senderId,
         String senderNickname,
+        Long receiverId,
         String receiverNickname,
         String title,
         String content,
@@ -20,7 +22,9 @@ public record LetterDetailResponse(
 
         return new LetterDetailResponse(
                 letter.getId(),
+                letter.getSender().getId(),
                 letter.getSender().getNickname(),
+                letter.getReceiver().getId(),
                 letter.getReceiver().getNickname(),
                 letter.getTitle(),
                 letter.getContent(),

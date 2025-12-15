@@ -1,15 +1,15 @@
 package com.project.deartime.app.controller;
 
-import com.project.deartime.app.dto.LetterDetailResponse;
-import com.project.deartime.app.dto.LetterListResponse;
-import com.project.deartime.app.dto.LetterSendRequest;
-import com.project.deartime.app.dto.LetterSendResponse;
+import com.project.deartime.app.dto.*;
 import com.project.deartime.app.service.LetterService;
 import com.project.deartime.global.dto.ApiResponseTemplete;
+import com.project.deartime.global.dto.PageResponse;
 import com.project.deartime.global.exception.SuccessCode;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,13 +23,6 @@ import java.util.List;
 public class LetterController {
 
     private final LetterService letterService;
-
-    private Sort getSort(String sortBy) {
-        if ("oldest".equalsIgnoreCase(sortBy)) {
-            return Sort.by(Sort.Direction.ASC, "createdAt");
-        }
-        return Sort.by(Sort.Direction.DESC, "createdAt");
-    }
 
     private Long getCurrentUserId(Long principalId) {
         if (principalId == null) {
@@ -62,59 +55,63 @@ public class LetterController {
 
     // 받은 편지 모아보기
     @GetMapping("/received")
-    public ResponseEntity<ApiResponseTemplete<List<LetterListResponse>>> getReceivedLetters(
+    public ResponseEntity<ApiResponseTemplete<PageResponse<LetterListResponse>>> getReceivedLetters(
             @AuthenticationPrincipal Long principalId,
-            @RequestParam(defaultValue = "latest") String sortBy
+            @PageableDefault(size = 8, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Long userId = getCurrentUserId(principalId);
-        Sort sort = getSort(sortBy);
+        PageResponse<LetterListResponse> response = letterService.getReceivedLetters(userId, pageable);
 
-        List<LetterListResponse> response = letterService.getReceivedLetters(userId, sort);
+        SuccessCode successCode = response.totalElements() == 0
+                ? SuccessCode.GET_LETTER_EMPTY
+                : SuccessCode.GET_LETTER_SUCCESS;
 
-        return ApiResponseTemplete.success(SuccessCode.GET_LETTER_SUCCESS, response);
+        return ApiResponseTemplete.success(successCode, response);
     }
 
     // 보낸 편지 모아보기
     @GetMapping("/sent")
-    public ResponseEntity<ApiResponseTemplete<List<LetterListResponse>>> getSentLetter(
+    public ResponseEntity<ApiResponseTemplete<PageResponse<LetterListResponse>>> getSentLetter(
             @AuthenticationPrincipal Long principalId,
-            @RequestParam(defaultValue = "latest") String sortBy
+            @PageableDefault(size = 8, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Long userId = getCurrentUserId(principalId);
-        Sort sort = getSort(sortBy);
+        PageResponse<LetterListResponse> response = letterService.getSentLetters(userId, pageable);
 
-        List<LetterListResponse> response = letterService.getSentLetters(userId, sort);
+        SuccessCode successCode = response.totalElements() == 0
+                ? SuccessCode.GET_LETTER_EMPTY
+                : SuccessCode.GET_LETTER_SUCCESS;
 
-        return ApiResponseTemplete.success(SuccessCode.GET_LETTER_SUCCESS, response);
+        return ApiResponseTemplete.success(successCode, response);
     }
 
     // 즐겨찾기 한 편지 모아보기
     @GetMapping("/bookmarked")
-    public ResponseEntity<ApiResponseTemplete<List<LetterListResponse>>> getBookmarkedLetters(
+    public ResponseEntity<ApiResponseTemplete<PageResponse<LetterListResponse>>> getBookmarkedLetters(
             @AuthenticationPrincipal Long principalId,
-            @RequestParam(defaultValue = "latest") String sortBy
+            @PageableDefault(size = 8, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Long userId = getCurrentUserId(principalId);
-        Sort sort = getSort(sortBy);
+        PageResponse<LetterListResponse> response = letterService.getBookmarkedLetters(userId, pageable);
 
-        List<LetterListResponse> response = letterService.getBookmarkedLetters(userId, sort);
+        SuccessCode successCode = response.totalElements() == 0
+                ? SuccessCode.GET_LETTER_EMPTY
+                : SuccessCode.GET_LETTER_SUCCESS;
 
-        return ApiResponseTemplete.success(SuccessCode.GET_LETTER_SUCCESS, response);
+        return ApiResponseTemplete.success(successCode, response);
     }
 
     // 우리의 우체통
     @GetMapping("/conversation/{targetId}")
-    public ResponseEntity<ApiResponseTemplete<List<LetterListResponse>>> getConversationLetters(
+    public ResponseEntity<ApiResponseTemplete<PageResponse<LetterListResponse>>> getConversationLetters(
             @AuthenticationPrincipal Long principalId,
             @PathVariable Long targetId,
-            @RequestParam(defaultValue = "latest") String sortBy
+            @PageableDefault(size = 8, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Long userId = getCurrentUserId(principalId);
-        Sort sort = getSort(sortBy);
+        PageResponse<LetterListResponse> response = letterService.getConversationLetters(userId, targetId, pageable);
 
-        List<LetterListResponse> response = letterService.getConversationLetters(userId, targetId, sort);
-
-        SuccessCode successCode = response.isEmpty()
+        SuccessCode successCode = response.data().isEmpty()
                 ? SuccessCode.CONVERSATION_EMPTY
                 : SuccessCode.CONVERSATION_FETCH_SUCCESS;
 

@@ -1,16 +1,16 @@
 package com.project.deartime.app.service;
 
 import com.project.deartime.app.domain.*;
-import com.project.deartime.app.dto.LetterDetailResponse;
-import com.project.deartime.app.dto.LetterListResponse;
-import com.project.deartime.app.dto.LetterSendRequest;
-import com.project.deartime.app.dto.LetterSendResponse;
+import com.project.deartime.app.dto.*;
 import com.project.deartime.app.repository.LetterFavoriteRepository;
 import com.project.deartime.app.repository.LetterRepository;
 import com.project.deartime.app.repository.LetterThemeRepository;
 import com.project.deartime.app.repository.UserRepository;
+import com.project.deartime.global.dto.PageResponse;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -90,41 +90,42 @@ public class LetterService {
     }
 
     // 받은 편지 모아보기(GET /api/letters/received)
-    public List<LetterListResponse> getReceivedLetters(Long userId, Sort sort) {
-        List<Letter> letters = letterRepository.findByReceiverIdAndIsDeletedByReceiverFalse(userId, sort);
+    @Transactional(readOnly = true)
+    public PageResponse<LetterListResponse> getReceivedLetters(Long userId, Pageable pageable) {
+        Page<Letter> letterPage = letterRepository.findByReceiverIdAndIsDeletedByReceiverFalse(userId, pageable);
+        Page<LetterListResponse> responsePage = letterPage.map(letter -> mapToLetterListResponse(letter, userId));
 
-        return letters.stream()
-                .map(letter -> mapToLetterListResponse(letter, userId))
-                .toList();
+        return PageResponse.from(responsePage);
     }
 
     // 보낸 편지 모아보기(GET /api/letters/sent)
-    public List<LetterListResponse> getSentLetters(Long userId, Sort sort){
-        List<Letter> letters = letterRepository.findBySenderIdAndIsDeletedBySenderFalse(userId, sort);
+    @Transactional(readOnly = true)
+    public PageResponse<LetterListResponse> getSentLetters(Long userId, Pageable pageable){
+        Page<Letter> letterPage = letterRepository.findBySenderIdAndIsDeletedBySenderFalse(userId, pageable);
+        Page<LetterListResponse> responsePage = letterPage.map(letter -> mapToLetterListResponse(letter, userId));
 
-        return letters.stream()
-                .map(letter -> mapToLetterListResponse(letter, userId))
-                .toList();
+        return PageResponse.from(responsePage);
     }
 
     // 즐겨찾기 한 편지 모아보기(GET /api/letters/bookmarked)
-    public List<LetterListResponse> getBookmarkedLetters(Long userId, Sort sort) {
-        List<Letter> letters = letterFavoriteRepository.findBookmarkedLettersByUserId(userId, sort);
+    @Transactional(readOnly = true)
+    public PageResponse<LetterListResponse> getBookmarkedLetters(Long userId, Pageable pageable) {
+        Page<Letter> letterPage = letterFavoriteRepository.findBookmarkedLettersByUserId(userId, pageable);
+        Page<LetterListResponse> responsePage = letterPage.map(letter -> LetterListResponse.fromEntity(letter, true));
 
-        return letters.stream()
-                .map(letter -> LetterListResponse.fromEntity(letter, true))
-                .toList();
+        return PageResponse.from(responsePage);
     }
 
     // 특정인과 주고받은 편지(GET /api/letters/conversation?targetId={targetId})
-    public List<LetterListResponse> getConversationLetters(Long currentUserId, Long targetUserId, Sort sort) {
+    @Transactional(readOnly = true)
+    public PageResponse<LetterListResponse> getConversationLetters(Long currentUserId, Long targetUserId, Pageable pageable) {
         userRepository.findById(targetUserId)
                 .orElseThrow(() -> new EntityNotFoundException("대상 사용자를 찾을 수 없습니다: " + targetUserId));
-        List<Letter> letters = letterRepository.findConversationLetters(currentUserId, targetUserId, sort);
 
-        return letters.stream()
-                .map(letter -> mapToLetterListResponse(letter, currentUserId))
-                .toList();
+        Page<Letter> letterPage = letterRepository.findConversationLetters(currentUserId, targetUserId, pageable);
+        Page<LetterListResponse> responsePage = letterPage.map(letter -> mapToLetterListResponse(letter, currentUserId));
+
+        return PageResponse.from(responsePage);
     }
 
     // 편지 상세 확인 및 읽음 처리(GET /api/letters/{letterId}
