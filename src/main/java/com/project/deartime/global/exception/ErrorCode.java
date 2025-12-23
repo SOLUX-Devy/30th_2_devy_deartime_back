@@ -63,6 +63,12 @@ public enum ErrorCode {
     LETTER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 편지에 접근하거나 조작할 권한이 없습니다."),
     LETTER_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 편지를 찾을 수 없습니다."),
     LETTER_THEME_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 편지 테마를 찾을 수 없습니다."),
+
+    //timecapsule
+    TIMECAPSULE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 타임캡슐을 찾을 수 없습니다."),
+    TIMECAPSULE_NOT_OPENED(HttpStatus.FORBIDDEN, "아직 개봉 시간이 되지 않은 타임캡슐입니다."),
+    TIMECAPSULE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 타임캡슐에 접근할 권한이 없습니다."),
+
 ;
 
     private final HttpStatus httpStatus;

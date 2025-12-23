@@ -33,6 +33,9 @@ public class TimeCapsule extends BaseTimeEntity {
     @Column(name = "is_notified", nullable = false)
     private Boolean isNotified = false;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     // N:1 관계: senderId (보낸 사람)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = false)
@@ -42,4 +45,9 @@ public class TimeCapsule extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
+
+    public boolean isOpened() {
+        return LocalDateTime.now().isAfter(this.openAt);
+    }
+
 }

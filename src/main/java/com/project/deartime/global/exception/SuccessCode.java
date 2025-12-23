@@ -21,7 +21,13 @@ public enum SuccessCode {
 
     // Server
     IMAGE_UPLOAD_SUCCESS(HttpStatus.OK, "이미지 업로드 성공"),
-    HOME_DATA_RETRIEVED(HttpStatus.OK, "홈화면으로 정보 받아오기 성공");
+    HOME_DATA_RETRIEVED(HttpStatus.OK, "홈화면으로 정보 받아오기 성공"),
+
+    //TimeCapsule
+    CREATE_TIMECAPSULE_SUCCESS(HttpStatus.CREATED, "타임캡슐 봉인 및 전송에 성공했습니다."),
+    GET_TIMECAPSULE_SUCCESS(HttpStatus.OK, "타임캡슐 조회에 성공했습니다.")
+
+    ;
 
     private final HttpStatus httpStatus;
     private final String message;
