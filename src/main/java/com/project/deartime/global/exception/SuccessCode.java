@@ -21,7 +21,22 @@ public enum SuccessCode {
 
     // Server
     IMAGE_UPLOAD_SUCCESS(HttpStatus.OK, "이미지 업로드 성공"),
-    HOME_DATA_RETRIEVED(HttpStatus.OK, "홈화면으로 정보 받아오기 성공");
+    HOME_DATA_RETRIEVED(HttpStatus.OK, "홈화면으로 정보 받아오기 성공"),
+
+    // Friend 관련 200 OK
+    FRIEND_LIST_SUCCESS(HttpStatus.OK, "친구 목록 조회 성공"),
+    FRIEND_SEARCH_SUCCESS(HttpStatus.OK, "친구 검색 성공"),
+    FRIEND_REQUEST_ACCEPT_SUCCESS(HttpStatus.OK, "친구 요청을 수락했습니다."),
+    FRIEND_REQUEST_REJECT_SUCCESS(HttpStatus.OK, "친구 요청을 거절했습니다."),
+    FRIEND_BLOCK_SUCCESS(HttpStatus.OK, "사용자를 차단했습니다."),
+    FRIEND_DELETE_SUCCESS(HttpStatus.OK, "친구 관계를 삭제했습니다."),
+    PROXY_SET_SUCCESS(HttpStatus.OK, "대리인을 설정했습니다."),
+    PROXY_REMOVE_SUCCESS(HttpStatus.OK, "대리인을 해제했습니다."),
+
+    // 201 Created
+    FRIEND_REQUEST_SUCCESS(HttpStatus.CREATED, "친구 요청을 보냈습니다."),
+
+    ;
 
     private final HttpStatus httpStatus;
     private final String message;

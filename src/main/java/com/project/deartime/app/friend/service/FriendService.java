@@ -9,6 +9,8 @@ import com.project.deartime.app.friend.dto.FriendSearchResponse;
 import com.project.deartime.app.friend.dto.ProxyResponseDto;
 import com.project.deartime.app.friend.repository.FriendRepository;
 import com.project.deartime.app.friend.repository.ProxyRepository;
+import com.project.deartime.global.exception.CoreApiException;
+import com.project.deartime.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,14 +33,10 @@ public class FriendService {
      * 내 친구 목록 조회 (accepted 상태만)
      */
     public List<FriendResponseDto> getMyFriends(Long userId) {
-        // userId가 user 또는 friend에 포함되고, status가 accepted인 관계 찾기
         List<Friend> friendships = friendRepository.findAcceptedFriendsByUserId(userId);
-
         List<FriendResponseDto> friendList = new ArrayList<>();
 
         for (Friend friendship : friendships) {
-            // 내가 user인 경우 -> friend 정보를 반환
-            // 내가 friend인 경우 -> user 정보를 반환
             User friendUser = friendship.getUser().getId().equals(userId)
                     ? friendship.getFriend()
                     : friendship.getUser();
@@ -64,7 +62,6 @@ public class FriendService {
      */
     public List<FriendSearchResponse> searchFriendsByNickname(Long currentUserId, String keyword) {
         List<User> searchedUsers = userRepository.searchByNickname(keyword, currentUserId);
-
         List<FriendSearchResponse> responses = new ArrayList<>();
 
         for (User user : searchedUsers) {
@@ -91,15 +88,15 @@ public class FriendService {
     public FriendResponseDto sendFriendRequest(Long userId, Long friendId) {
         // 1. 본인에게 친구 요청하는 경우
         if (userId.equals(friendId)) {
-            throw new IllegalArgumentException("자기 자신에게 친구 요청을 보낼 수 없습니다.");
+            throw new CoreApiException(ErrorCode.FRIEND_SELF_REQUEST);
         }
 
         // 2. 사용자 존재 확인
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CoreApiException(ErrorCode.USER_NOT_FOUND));
 
         User friend = userRepository.findById(friendId)
-                .orElseThrow(() -> new IllegalArgumentException("친구를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CoreApiException(ErrorCode.FRIEND_NOT_FOUND));
 
         // 3. 이미 친구 관계가 있는지 확인 (양방향)
         List<Friend> existingFriendships = friendRepository.findFriendshipBetween(userId, friendId);
@@ -108,7 +105,7 @@ public class FriendService {
             String status = existing.getStatus();
 
             if ("accepted".equals(status)) {
-                throw new IllegalArgumentException("이미 친구 관계입니다.");
+                throw new CoreApiException(ErrorCode.FRIEND_ALREADY_EXISTS);
             }
 
             if ("pending".equals(status)) {
@@ -128,12 +125,12 @@ public class FriendService {
                 // 내가 이미 요청을 보낸 경우
                 if (existing.getUser().getId().equals(userId) &&
                         existing.getFriend().getId().equals(friendId)) {
-                    throw new IllegalArgumentException("이미 친구 요청을 보냈습니다.");
+                    throw new CoreApiException(ErrorCode.FRIEND_REQUEST_ALREADY_SENT);
                 }
             }
 
             if ("blocked".equals(status)) {
-                throw new IllegalArgumentException("차단된 사용자입니다.");
+                throw new CoreApiException(ErrorCode.FRIEND_USER_BLOCKED);
             }
         }
 
@@ -157,16 +154,16 @@ public class FriendService {
     public FriendResponseDto acceptFriendRequest(Long userId, Long friendId) {
         // 1. 사용자 확인
         if (userId.equals(friendId)) {
-            throw new IllegalArgumentException("잘못된 요청입니다.");
+            throw new CoreApiException(ErrorCode.INVALID_REQUEST);
         }
 
         // 2. 상대방이 보낸 친구 요청 찾기 (friendId -> userId)
         Friend friendRequest = friendRepository.findByUserIdAndFriendId(friendId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("친구 요청을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CoreApiException(ErrorCode.FRIEND_REQUEST_NOT_FOUND));
 
         // 3. 상태 확인
         if (!"pending".equals(friendRequest.getStatus())) {
-            throw new IllegalArgumentException("대기 중인 친구 요청이 아닙니다.");
+            throw new CoreApiException(ErrorCode.FRIEND_REQUEST_NOT_PENDING);
         }
 
         // 4. 상태를 accepted로 변경
@@ -189,16 +186,16 @@ public class FriendService {
     public void rejectFriendRequest(Long userId, Long friendId) {
         // 1. 사용자 확인
         if (userId.equals(friendId)) {
-            throw new IllegalArgumentException("잘못된 요청입니다.");
+            throw new CoreApiException(ErrorCode.INVALID_REQUEST);
         }
 
         // 2. 상대방이 보낸 친구 요청 찾기 (friendId -> userId)
         Friend friendRequest = friendRepository.findByUserIdAndFriendId(friendId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("친구 요청을 찾을 수 없습니다."));
+                .orElseThrow(() -> new CoreApiException(ErrorCode.FRIEND_REQUEST_NOT_FOUND));
 
         // 3. 상태 확인
         if (!"pending".equals(friendRequest.getStatus())) {
-            throw new IllegalArgumentException("대기 중인 친구 요청이 아닙니다.");
+            throw new CoreApiException(ErrorCode.FRIEND_REQUEST_NOT_PENDING);
         }
 
         // 4. 친구 요청 삭제
@@ -212,14 +209,14 @@ public class FriendService {
     public FriendResponseDto blockFriend(Long userId, Long friendId) {
         // 1. 사용자 확인
         if (userId.equals(friendId)) {
-            throw new IllegalArgumentException("자기 자신을 차단할 수 없습니다.");
+            throw new CoreApiException(ErrorCode.FRIEND_SELF_BLOCK);
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CoreApiException(ErrorCode.USER_NOT_FOUND));
 
         User friend = userRepository.findById(friendId)
-                .orElseThrow(() -> new IllegalArgumentException("차단할 사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CoreApiException(ErrorCode.FRIEND_NOT_FOUND));
 
         // 2. 기존 관계 삭제 (양방향 모두)
         List<Friend> existingRelations = friendRepository.findFriendshipBetween(userId, friendId);
@@ -245,14 +242,14 @@ public class FriendService {
     public void deleteFriend(Long userId, Long friendId) {
         // 1. 사용자 확인
         if (userId.equals(friendId)) {
-            throw new IllegalArgumentException("잘못된 요청입니다.");
+            throw new CoreApiException(ErrorCode.INVALID_REQUEST);
         }
 
         // 2. 친구 관계 찾기 (양방향)
         List<Friend> friendships = friendRepository.findFriendshipBetween(userId, friendId);
 
         if (friendships.isEmpty()) {
-            throw new IllegalArgumentException("친구 관계를 찾을 수 없습니다.");
+            throw new CoreApiException(ErrorCode.FRIEND_RELATIONSHIP_NOT_FOUND);
         }
 
         // 3. 모든 관계 삭제
@@ -271,14 +268,14 @@ public class FriendService {
     public ProxyResponseDto setProxy(Long userId, Long proxyUserId, LocalDateTime expiredAt) {
         // 1. 사용자 확인
         if (userId.equals(proxyUserId)) {
-            throw new IllegalArgumentException("자기 자신을 대리인으로 설정할 수 없습니다.");
+            throw new CoreApiException(ErrorCode.PROXY_SELF_REQUEST);
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CoreApiException(ErrorCode.USER_NOT_FOUND));
 
         User proxyUser = userRepository.findById(proxyUserId)
-                .orElseThrow(() -> new IllegalArgumentException("대리인으로 설정할 사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new CoreApiException(ErrorCode.FRIEND_NOT_FOUND));
 
         // 2. 친구 관계 확인 (accepted 상태)
         List<Friend> friendships = friendRepository.findFriendshipBetween(userId, proxyUserId);
@@ -286,7 +283,7 @@ public class FriendService {
                 .anyMatch(f -> "accepted".equals(f.getStatus()));
 
         if (!isFriend) {
-            throw new IllegalArgumentException("친구 관계가 아닌 사용자는 대리인으로 설정할 수 없습니다.");
+            throw new CoreApiException(ErrorCode.FRIEND_NOT_ACCEPTED);
         }
 
         // 3. 기존 대리인 관계 확인
@@ -325,14 +322,14 @@ public class FriendService {
     public void removeProxy(Long userId, Long proxyUserId) {
         // 1. 사용자 확인
         if (userId.equals(proxyUserId)) {
-            throw new IllegalArgumentException("잘못된 요청입니다.");
+            throw new CoreApiException(ErrorCode.INVALID_REQUEST);
         }
 
         // 2. 대리인 관계 찾기
         List<Proxy> proxies = proxyRepository.findByUserIdAndProxyUserId(userId, proxyUserId);
 
         if (proxies.isEmpty()) {
-            throw new IllegalArgumentException("대리인 관계를 찾을 수 없습니다.");
+            throw new CoreApiException(ErrorCode.PROXY_NOT_FOUND);
         }
 
         // 3. 대리인 관계 삭제
@@ -344,7 +341,6 @@ public class FriendService {
      */
     private String determineFriendStatus(Long userId1, Long userId2) {
         Optional<Friend> sentRequest = friendRepository.findByUserIdAndFriendId(userId1, userId2);
-
         Optional<Friend> receivedRequest = friendRepository.findByUserIdAndFriendId(userId2, userId1);
 
         if (sentRequest.isPresent()) {
