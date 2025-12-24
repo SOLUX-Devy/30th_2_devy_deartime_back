@@ -61,8 +61,7 @@ public class UserService {
             throw new CoreApiException(ErrorCode.DUPLICATE_NICKNAME);
         }
 
-        // 기존 completeSignUp 메소드 활용
-        user.completeSignUp(
+        user.updateProfile(
                 request.getNickname(),
                 request.getBirthDate(),
                 request.getBio(),

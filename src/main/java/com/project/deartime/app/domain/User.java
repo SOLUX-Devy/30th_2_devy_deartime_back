@@ -64,6 +64,33 @@ public class User extends BaseTimeEntity {
         this.profileImageUrl = profileImageUrl;
     }
 
+    /* =========================
+   프로필 수정 (닉네임 등)
+ ========================= */
+    public void updateProfile(
+            String nickname,
+            LocalDate birthDate,
+            String bio,
+            String profileImageUrl
+    ) {
+        if (nickname != null) {
+            this.nickname = nickname;
+        }
+
+        if (birthDate != null) {
+            this.birthDate = birthDate;
+        }
+
+        if (bio != null) {
+            this.bio = bio;
+        }
+
+        if (profileImageUrl != null) {
+            this.profileImageUrl = profileImageUrl;
+        }
+    }
+
+
     // 1. Letters: User 1명이 보낸 편지 N개
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL)
     private List<Letter> sentLetters = new ArrayList<>();
