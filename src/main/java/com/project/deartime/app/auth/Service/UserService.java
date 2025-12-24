@@ -16,6 +16,11 @@ public class UserService {
 
     public User signUp(String providerId, String email, SignUpRequest request) {
 
+        System.out.println("=== 회원가입 시작 ===");
+        System.out.println("providerId: " + providerId);
+        System.out.println("email: " + email);
+        System.out.println("nickname: " + request.getNickname());
+
         if (userRepository.existsByNickname(request.getNickname())) {
             throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
         }
@@ -29,6 +34,16 @@ public class UserService {
                 .profileImageUrl(request.getProfileImageUrl())
                 .build();
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        System.out.println("저장된 User ID: " + savedUser.getId());
+        System.out.println("=== 회원가입 완료 ===");
+
+        return savedUser;
+    }
+
+    @Transactional(readOnly = true)
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
     }
 }
