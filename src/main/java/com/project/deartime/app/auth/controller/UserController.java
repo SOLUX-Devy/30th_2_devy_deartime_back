@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +29,8 @@ public class UserController {
     @PostMapping("/signup")
     public ResponseEntity<ApiResponseTemplete<Map<String, Object>>> signUp(
             @RequestHeader("Authorization") String authHeader,
-            @RequestBody @Valid SignUpRequest request,
+            @RequestPart @Valid SignUpRequest request,  // @RequestBody -> @RequestPart
+            @RequestPart(required = false) MultipartFile profileImage,  // 추가
             HttpServletResponse response
     ) {
         String tempToken = authHeader.replace("Bearer ", "");
@@ -43,8 +45,9 @@ public class UserController {
         System.out.println("=== 토큰에서 추출한 정보 ===");
         System.out.println("providerId: " + providerId);
         System.out.println("email: " + email);
+        System.out.println("profileImage: " + (profileImage != null ? profileImage.getOriginalFilename() : "없음"));
 
-        User user = userService.signUp(providerId, email, request);
+        User user = userService.signUp(providerId, email, request, profileImage);  // profileImage 추가
 
         String accessToken = jwtTokenProvider.createAccessToken(user.getId().toString(), user.getEmail());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId().toString());
@@ -92,14 +95,16 @@ public class UserController {
     @PutMapping("/me")
     public ResponseEntity<ApiResponseTemplete<Map<String, Object>>> updateMyProfile(
             @AuthenticationPrincipal String userId,
-            @RequestBody @Valid UpdateProfileRequest request
+            @RequestPart @Valid UpdateProfileRequest request,  // @RequestBody -> @RequestPart
+            @RequestPart(required = false) MultipartFile profileImage  // 추가
     ) {
         System.out.println("=== 프로필 업데이트 ===");
         System.out.println("userId: " + userId);
         System.out.println("nickname: " + request.getNickname());
         System.out.println("birthDate: " + request.getBirthDate());
+        System.out.println("profileImage: " + (profileImage != null ? profileImage.getOriginalFilename() : "없음"));
 
-        User updatedUser = userService.updateProfile(Long.parseLong(userId), request);
+        User updatedUser = userService.updateProfile(Long.parseLong(userId), request, profileImage);  // profileImage 추가
 
         Map<String, Object> userData = new HashMap<>();
         userData.put("userId", updatedUser.getId());
