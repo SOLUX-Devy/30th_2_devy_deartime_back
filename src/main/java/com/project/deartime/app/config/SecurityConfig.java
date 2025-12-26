@@ -1,8 +1,11 @@
 package com.project.deartime.app.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.deartime.app.auth.Service.CustomOAuth2UserService;
 import com.project.deartime.app.auth.controller.GoogleOAuth2SuccessHandler;
 import com.project.deartime.app.auth.filter.JwtAuthenticationFilter;
+import com.project.deartime.global.dto.ApiResponseTemplete;
+import com.project.deartime.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,7 +59,39 @@ public class SecurityConfig {
                         ).authenticated()
                         .anyRequest().authenticated()
                 )
+                // ✅ 예외 처리 핸들러 추가 (ErrorCode 사용)
+                .exceptionHandling(exception -> exception
+                        // 인증되지 않은 사용자 접근 시
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(ErrorCode.UNAUTHORIZED_EXCEPTION.getHttpStatusCode());
+                            response.setContentType("application/json;charset=UTF-8");
 
+                            ApiResponseTemplete<Object> errorResponse = ApiResponseTemplete.builder()
+                                    .status(ErrorCode.UNAUTHORIZED_EXCEPTION.getHttpStatusCode())
+                                    .success(false)
+                                    .message(ErrorCode.UNAUTHORIZED_EXCEPTION.getMessage())
+                                    .data(null)
+                                    .build();
+
+                            ObjectMapper mapper = new ObjectMapper();
+                            response.getWriter().write(mapper.writeValueAsString(errorResponse));
+                        })
+                        // 권한이 없는 사용자 접근 시
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(ErrorCode.ACCESS_DENIED_EXCEPTION.getHttpStatusCode());
+                            response.setContentType("application/json;charset=UTF-8");
+
+                            ApiResponseTemplete<Object> errorResponse = ApiResponseTemplete.builder()
+                                    .status(ErrorCode.ACCESS_DENIED_EXCEPTION.getHttpStatusCode())
+                                    .success(false)
+                                    .message(ErrorCode.ACCESS_DENIED_EXCEPTION.getMessage())
+                                    .data(null)
+                                    .build();
+
+                            ObjectMapper mapper = new ObjectMapper();
+                            response.getWriter().write(mapper.writeValueAsString(errorResponse));
+                        })
+                )
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(customOAuth2UserService)
