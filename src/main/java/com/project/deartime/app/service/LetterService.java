@@ -1,22 +1,21 @@
 package com.project.deartime.app.service;
 
+import com.project.deartime.app.auth.repository.UserRepository;
 import com.project.deartime.app.domain.*;
 import com.project.deartime.app.dto.*;
 import com.project.deartime.app.repository.LetterFavoriteRepository;
 import com.project.deartime.app.repository.LetterRepository;
 import com.project.deartime.app.repository.LetterThemeRepository;
-import com.project.deartime.app.repository.UserRepository;
+
 import com.project.deartime.global.dto.PageResponse;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
