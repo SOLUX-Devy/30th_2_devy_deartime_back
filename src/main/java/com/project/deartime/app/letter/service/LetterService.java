@@ -11,7 +11,8 @@ import com.project.deartime.app.letter.repository.LetterRepository;
 import com.project.deartime.app.letter.repository.LetterThemeRepository;
 
 import com.project.deartime.global.dto.PageResponse;
-import jakarta.persistence.EntityNotFoundException;
+import com.project.deartime.global.exception.CoreApiException;
+import com.project.deartime.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,9 +47,11 @@ public class LetterService {
     @Transactional
     public LetterSendResponse sendLetter(LetterSendRequest request) {
         User sender = userRepository.findById(request.senderId())
-                .orElseThrow(() -> new EntityNotFoundException("발신자 ID를 찾을 수 없습니다: " + request.senderId()));
+                .orElseThrow(() -> new CoreApiException(ErrorCode.NOT_FOUND_ID_EXCEPTION,
+                        "발신자 ID를 찾을 수 없습니다: " + request.senderId()));
         User receiver = userRepository.findById(request.receiverId())
-                .orElseThrow(() -> new EntityNotFoundException("수신자 ID를 찾을 수 없습니다: " + request.receiverId()));
+                .orElseThrow(() -> new CoreApiException(ErrorCode.NOT_FOUND_ID_EXCEPTION,
+                        "수신자 ID를 찾을 수 없습니다: " + request.receiverId()));
 
         LetterTheme theme = null;
         String requestedThemeCode = request.theme();
@@ -68,7 +71,9 @@ public class LetterService {
 
         if (theme == null) {
             theme = letterThemeRepository.findByCode("DEFAULT")
-                    .orElseThrow(() -> new EntityNotFoundException("기본 테마(DEFAULT)를 찾을 수 없습니다. DB를 확인해주세요."));
+                    .orElseThrow(() ->
+                            new CoreApiException(ErrorCode.LETTER_DEFAULT_NOT_FOUND)
+                    );
         }
 
         Letter letter = Letter.builder()
@@ -122,7 +127,10 @@ public class LetterService {
     @Transactional(readOnly = true)
     public PageResponse<LetterListResponse> getConversationLetters(Long currentUserId, Long targetUserId, Pageable pageable) {
         userRepository.findById(targetUserId)
-                .orElseThrow(() -> new EntityNotFoundException("대상 사용자를 찾을 수 없습니다: " + targetUserId));
+                .orElseThrow(() ->
+                        new CoreApiException(ErrorCode.NOT_FOUND_ID_EXCEPTION,
+                                "상대 유저를 찾을 수 없습니다. userId=" + targetUserId)
+                );
 
         Page<Letter> letterPage = letterRepository.findConversationLetters(currentUserId, targetUserId, pageable);
         Page<LetterListResponse> responsePage = letterPage.map(letter -> mapToLetterListResponse(letter, currentUserId));
@@ -134,7 +142,10 @@ public class LetterService {
     @Transactional
     public LetterDetailResponse getLetterDetail(Long letterId, Long currentUserId) {
         Letter letter = letterRepository.findById(letterId)
-                .orElseThrow(() -> new EntityNotFoundException("편지를 찾을 수 없습니다: " + letterId));
+                .orElseThrow(() ->
+                        new CoreApiException(ErrorCode.LETTER_NOT_FOUND,
+                                "편지를 찾을 수 없습니다. letterId=" + letterId)
+                );
 
         if (!letter.getSender().getId().equals(currentUserId) && !letter.getReceiver().getId().equals(currentUserId)) {
             throw new AccessDeniedException("해당 편지에 접근할 권한이 없습니다.");
@@ -153,9 +164,11 @@ public class LetterService {
     @Transactional
     public boolean toggleBookmark(Long letterId, Long userId) {
         Letter letter = letterRepository.findById(letterId)
-                .orElseThrow(() -> new EntityNotFoundException("편지를 찾을 수 없습니다: " + letterId));
+                .orElseThrow(() -> new CoreApiException(ErrorCode.LETTER_NOT_FOUND,
+                        "편지를 찾을 수 없습니다. letterId=" + letterId));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다: " + userId));
+                .orElseThrow(() -> new CoreApiException(ErrorCode.NOT_FOUND_ID_EXCEPTION,
+                        "사용자를 찾을 수 없습니다. userId=" + userId));
 
         boolean isSender = letter.getSender().getId().equals(userId);
         boolean isReceiver = letter.getReceiver().getId().equals(userId);
@@ -184,7 +197,8 @@ public class LetterService {
     public void softDeleteOrPermanentlyDelete(Long letterId, Long currentUserId) {
 
         Letter letter = letterRepository.findById(letterId)
-                .orElseThrow(() -> new EntityNotFoundException("편지를 찾을 수 없습니다: " + letterId));
+                .orElseThrow(() -> new CoreApiException(ErrorCode.LETTER_NOT_FOUND,
+                        "편지를 찾을 수 없습니다. letterId=" + letterId));
 
         if (!letter.getSender().getId().equals(currentUserId) && !letter.getReceiver().getId().equals(currentUserId)) {
             throw new AccessDeniedException("해당 편지를 삭제할 권한이 없습니다.");
