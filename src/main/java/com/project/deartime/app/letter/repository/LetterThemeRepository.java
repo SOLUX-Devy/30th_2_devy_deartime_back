@@ -1,4 +1,4 @@
-package com.project.deartime.app.repository;
+package com.project.deartime.app.letter.repository;
 
 import com.project.deartime.app.domain.LetterTheme;
 import org.springframework.data.jpa.repository.JpaRepository;

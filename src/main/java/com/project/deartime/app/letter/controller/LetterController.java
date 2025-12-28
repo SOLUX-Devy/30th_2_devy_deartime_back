@@ -1,7 +1,10 @@
-package com.project.deartime.app.controller;
+package com.project.deartime.app.letter.controller;
 
-import com.project.deartime.app.dto.*;
-import com.project.deartime.app.service.LetterService;
+import com.project.deartime.app.letter.dto.LetterDetailResponse;
+import com.project.deartime.app.letter.dto.LetterListResponse;
+import com.project.deartime.app.letter.dto.LetterSendRequest;
+import com.project.deartime.app.letter.dto.LetterSendResponse;
+import com.project.deartime.app.letter.service.LetterService;
 import com.project.deartime.global.dto.ApiResponseTemplete;
 import com.project.deartime.global.dto.PageResponse;
 import com.project.deartime.global.exception.SuccessCode;

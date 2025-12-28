@@ -1,11 +1,14 @@
-package com.project.deartime.app.service;
+package com.project.deartime.app.letter.service;
 
 import com.project.deartime.app.auth.repository.UserRepository;
 import com.project.deartime.app.domain.*;
-import com.project.deartime.app.dto.*;
-import com.project.deartime.app.repository.LetterFavoriteRepository;
-import com.project.deartime.app.repository.LetterRepository;
-import com.project.deartime.app.repository.LetterThemeRepository;
+import com.project.deartime.app.letter.dto.LetterDetailResponse;
+import com.project.deartime.app.letter.dto.LetterListResponse;
+import com.project.deartime.app.letter.dto.LetterSendRequest;
+import com.project.deartime.app.letter.dto.LetterSendResponse;
+import com.project.deartime.app.letter.repository.LetterFavoriteRepository;
+import com.project.deartime.app.letter.repository.LetterRepository;
+import com.project.deartime.app.letter.repository.LetterThemeRepository;
 
 import com.project.deartime.global.dto.PageResponse;
 import jakarta.persistence.EntityNotFoundException;

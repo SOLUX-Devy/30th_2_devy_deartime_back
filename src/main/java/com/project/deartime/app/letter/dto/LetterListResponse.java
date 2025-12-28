@@ -1,33 +1,33 @@
-package com.project.deartime.app.dto;
+package com.project.deartime.app.letter.dto;
 
 import com.project.deartime.app.domain.Letter;
 
 import java.time.LocalDateTime;
 
-public record LetterDetailResponse(
+public record LetterListResponse(
         Long letterId,
-        Long senderId,
         String senderNickname,
-        Long receiverId,
         String receiverNickname,
         String title,
-        String content,
+        String summary,
         String themeCode,
         LocalDateTime sentAt,
         boolean isRead,
         boolean isBookmarked
 ) {
-    public static LetterDetailResponse fromEntity(Letter letter, boolean isBookmarked) {
+    public static LetterListResponse fromEntity(Letter letter, boolean isBookmarked) {
         String themeCode = letter.getTheme() != null ? letter.getTheme().getCode() : null;
+        String fullContent = letter.getContent();
+        String summary = (fullContent.length() > 50)
+                ? fullContent.substring(0, 50) + "..."
+                : fullContent;
 
-        return new LetterDetailResponse(
+        return new LetterListResponse(
                 letter.getId(),
-                letter.getSender().getId(),
                 letter.getSender().getNickname(),
-                letter.getReceiver().getId(),
                 letter.getReceiver().getNickname(),
                 letter.getTitle(),
-                letter.getContent(),
+                summary,
                 themeCode,
                 letter.getCreatedAt(),
                 letter.getIsRead(),

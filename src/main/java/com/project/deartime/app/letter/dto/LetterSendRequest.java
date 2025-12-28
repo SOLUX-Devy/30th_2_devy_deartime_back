@@ -1,4 +1,4 @@
-package com.project.deartime.app.dto;
+package com.project.deartime.app.letter.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
