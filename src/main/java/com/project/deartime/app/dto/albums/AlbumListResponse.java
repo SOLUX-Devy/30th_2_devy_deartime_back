@@ -7,7 +7,7 @@ public record AlbumListResponse(
         Long albumId,
         Long userId,
         String title,
-        String coverUrl,
+        String coverImageUrl,
         LocalDateTime createdAt
 ) {
     public static AlbumListResponse fromEntity(Album album) {
@@ -15,7 +15,9 @@ public record AlbumListResponse(
                 album.getId(),
                 album.getUser().getId(),
                 album.getTitle(),
-                album.getCoverUrl(),
+                album.getCoverPhoto() != null
+                        ? album.getCoverPhoto().getImageUrl()
+                        : null,
                 album.getCreatedAt()
         );
     }

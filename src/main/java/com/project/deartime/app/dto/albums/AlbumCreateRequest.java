@@ -8,5 +8,5 @@ public record AlbumCreateRequest(
         @Size(max = 50, message = "앨범 제목은 50자 이하로 작성해야 합니다.")
         String title,
 
-        String coverUrl
+        Long coverPhotoId
 ) {}

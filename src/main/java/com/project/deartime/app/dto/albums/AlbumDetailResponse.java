@@ -7,7 +7,7 @@ public record AlbumDetailResponse(
         Long albumId,
         Long userId,
         String title,
-        String coverUrl,
+        String coverImageUrl,
         String ownerNickname,
         LocalDateTime createdAt
 ) {
@@ -16,7 +16,9 @@ public record AlbumDetailResponse(
                 album.getId(),
                 album.getUser().getId(),
                 album.getTitle(),
-                album.getCoverUrl(),
+                album.getCoverPhoto() != null
+                        ? album.getCoverPhoto().getImageUrl()
+                        : null,
                 album.getUser().getNickname(),
                 album.getCreatedAt()
         );
