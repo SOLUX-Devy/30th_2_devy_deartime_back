@@ -5,16 +5,19 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.project.deartime.global.exception.CoreApiException;
+import com.project.deartime.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class S3Service {
@@ -50,8 +53,13 @@ public class S3Service {
                     new PutObjectRequest(bucket, fileName, inputStream, metadata)
                             .withCannedAcl(CannedAccessControlList.PublicRead)
             );
-        } catch (IOException e) {
-            throw new RuntimeException("파일 업로드 중 오류가 발생했습니다.", e);
+            log.info("[S3 UPLOAD] 파일 업로드 성공. fileName={}", fileName);
+        } catch (Exception e) {
+            log.error("[S3 UPLOAD] 파일 업로드 실패. fileName={}", fileName, e);
+            throw new CoreApiException(
+                    ErrorCode.S3_FILE_UPLOAD_FAILED,
+                    e
+            );
         }
 
         return amazonS3.getUrl(bucket, fileName).toString();
@@ -83,8 +91,18 @@ public class S3Service {
 
         try {
             amazonS3.deleteObject(new DeleteObjectRequest(bucket, fileName));
+            log.info("[S3 DELETE] 파일 제거 성공. fileName={}", fileName);
         } catch (Exception e) {
-            throw new RuntimeException("파일 삭제 중 오류가 발생했습니다.", e);
+            log.error(
+                    "[S3 DELETE] 파일 제거 실패. fileName={}, bucket={}",
+                    fileName,
+                    bucket,
+                    e
+            );
+            throw new CoreApiException(
+                    ErrorCode.S3_FILE_DELETE_FAILED,
+                    e
+            );
         }
     }
 
@@ -112,6 +130,21 @@ public class S3Service {
      * URL에서 파일명 추출
      */
     private String extractFileNameFromUrl(String fileUrl) {
-        return fileUrl.substring(fileUrl.indexOf(bucket) + bucket.length() + 1);
+        if (fileUrl == null || fileUrl.isBlank()) {
+            log.error("[S3 URL] fileUrl is null or empty");
+            throw new CoreApiException(ErrorCode.INVALID_S3_FILE_URL);
+        }
+
+        int bucketIndex = fileUrl.indexOf(bucket);
+        if (bucketIndex == -1) {
+            log.error(
+                    "[S3 URL] bucket not found in fileUrl. bucket={}, fileUrl={}",
+                    bucket,
+                    fileUrl
+            );
+            throw new CoreApiException(ErrorCode.INVALID_S3_FILE_URL);
+        }
+
+        return fileUrl.substring(bucketIndex + bucket.length() + 1);
     }
 }
