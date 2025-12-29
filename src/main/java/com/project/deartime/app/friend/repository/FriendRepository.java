@@ -29,4 +29,12 @@ public interface FriendRepository extends JpaRepository<Friend, FriendId> {
             "(f.user.id = :friendId AND f.friend.id = :userId)")
     List<Friend> findFriendshipBetween(@Param("userId") Long userId,
                                        @Param("friendId") Long friendId);
+
+
+    // 특정 상태의 친구 관계 존재 여부 확인(타임캡슐용)
+    @Query("SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END FROM Friend f " +
+            "WHERE f.user.id = :userId AND f.friend.id = :friendId AND f.status = :status")
+    boolean existsByUserIdAndFriendIdAndStatus(@Param("userId") Long userId,
+                                               @Param("friendId") Long friendId,
+                                               @Param("status") String status);
 }

@@ -54,6 +54,13 @@ public enum SuccessCode {
     PROXY_SET_SUCCESS(HttpStatus.OK, "대리인을 설정했습니다."),
     PROXY_REMOVE_SUCCESS(HttpStatus.OK, "대리인을 해제했습니다."),
 
+    // TimeCapsule 관련 201 Created
+    CAPSULE_CREATE_SUCCESS(HttpStatus.CREATED, "타임캡슐이 생성되었습니다."),
+
+    // TimeCapsule 관련 200 OK
+    CAPSULE_LIST_SUCCESS(HttpStatus.OK, "타임캡슐 목록 조회 성공"),
+    CAPSULE_GET_SUCCESS(HttpStatus.OK, "타임캡슐 상세 조회 성공"),
+
     ;
 
     private final HttpStatus httpStatus;
