@@ -43,7 +43,8 @@ public class SecurityConfig {
                                 "/api/auth/google",
                                 "/api/users/signup",
                                 "/login/oauth2/code/**",
-                                "/oauth2/**"
+                                "/oauth2/**",
+                                "/ws-stomp/**"  // WebSocket 엔드포인트
                         ).permitAll()
                         .requestMatchers("/api/auth/logout").authenticated()
                         // 회원가입은 임시 토큰으로 접근
@@ -55,7 +56,8 @@ public class SecurityConfig {
                                 "/api/letters/**",
                                 "/api/timecapsules/**",
                                 "/api/photos/**",
-                                "/api/albums/**"
+                                "/api/albums/**",
+                                "/api/notifications/**"  // 알림 API
                         ).authenticated()
                         .anyRequest().authenticated()
                 )

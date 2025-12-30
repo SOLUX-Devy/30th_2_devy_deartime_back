@@ -9,7 +9,7 @@ import com.project.deartime.app.domain.TimeCapsule;
 import com.project.deartime.app.domain.User;
 import com.project.deartime.app.friend.repository.FriendRepository;
 import com.project.deartime.app.auth.repository.UserRepository;
-import com.project.deartime.app.service.NotificationService;
+import com.project.deartime.app.notification.service.NotificationService;
 import com.project.deartime.app.service.S3Service;
 import com.project.deartime.global.exception.CoreApiException;
 import com.project.deartime.global.exception.ErrorCode;
