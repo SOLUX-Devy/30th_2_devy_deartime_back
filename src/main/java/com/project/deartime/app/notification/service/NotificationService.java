@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -30,7 +31,7 @@ public class NotificationService {
     /**
      * 알림 생성 및 웹소켓 전송
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public NotificationResponse createAndSendNotification(
             User receiver,
             NotificationType type,
@@ -89,7 +90,7 @@ public class NotificationService {
     /**
      * 편지 수신 알림
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notifyLetterReceived(User receiver, Long letterId, String senderNickname, String letterTitle) {
         createAndSendNotification(
                 receiver,
@@ -103,13 +104,13 @@ public class NotificationService {
     /**
      * 타임캡슐 수신 알림
      */
-    @Transactional
-    public void notifyCapsuleReceived(User receiver, Long capsuleId, String senderNickname) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyCapsuleReceived(User receiver, Long capsuleId, String senderNickname, String capsuleTitle) {
         createAndSendNotification(
                 receiver,
                 NotificationType.CAPSULE_RECEIVED,
                 senderNickname,
-                null, // 캡슐 제목은 열기 전까지 비공개
+                capsuleTitle,
                 capsuleId
         );
     }
@@ -117,7 +118,7 @@ public class NotificationService {
     /**
      * 타임캡슐 오픈 알림
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notifyCapsuleOpened(User receiver, Long capsuleId, String senderNickname, String capsuleTitle) {
         createAndSendNotification(
                 receiver,
@@ -131,7 +132,7 @@ public class NotificationService {
     /**
      * 친구 요청 알림
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notifyFriendRequest(User receiver, Long requesterId, String requesterNickname) {
         createAndSendNotification(
                 receiver,
@@ -145,7 +146,7 @@ public class NotificationService {
     /**
      * 친구 수락 알림
      */
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notifyFriendAccept(User receiver, Long accepterId, String accepterNickname) {
         createAndSendNotification(
                 receiver,
