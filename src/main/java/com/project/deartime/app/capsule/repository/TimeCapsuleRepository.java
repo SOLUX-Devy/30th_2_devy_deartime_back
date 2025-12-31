@@ -28,7 +28,7 @@ public interface TimeCapsuleRepository extends JpaRepository<TimeCapsule, Long> 
     /**
      * 개봉된 캡슐만
      */
-    @Query("SELECT tc FROM TimeCapsule tc WHERE tc.openAt < CURRENT_TIMESTAMP AND (tc.sender.id = :userId OR tc.receiver.id = :userId) ORDER BY tc.createdAt DESC")
+    @Query("SELECT tc FROM TimeCapsule tc WHERE tc.openAt <= CURRENT_TIMESTAMP AND (tc.sender.id = :userId OR tc.receiver.id = :userId) ORDER BY tc.createdAt DESC")
     Page<TimeCapsule> findOpenedCapsules(@Param("userId") Long userId, Pageable pageable);
 
     /**

@@ -33,6 +33,17 @@ public class TimeCapsuleController {
     private final UserRepository userRepository;
 
     /**
+     * Authentication에서 사용자 ID를 안전하게 파싱
+     */
+    private Long parseUserId(Authentication authentication) {
+        try {
+            return Long.parseLong(authentication.getName());
+        } catch (NumberFormatException e) {
+            throw new CoreApiException(ErrorCode.INVALID_ID_EXCEPTION, "사용자 ID 파싱에 실패했습니다.");
+        }
+    }
+
+    /**
      * 타임캡슐 생성
      */
     @PostMapping
@@ -41,7 +52,7 @@ public class TimeCapsuleController {
             @RequestPart(value = "imageFile", required = false) MultipartFile imageFile,
             Authentication authentication) {
 
-        Long userId = Long.parseLong(authentication.getName());
+        Long userId = parseUserId(authentication);
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new CoreApiException(ErrorCode.USER_NOT_FOUND));
 
@@ -96,7 +107,7 @@ public class TimeCapsuleController {
             @PathVariable Long capsuleId,
             Authentication authentication) {
 
-        Long userId = Long.parseLong(authentication.getName());
+        Long userId = parseUserId(authentication);
 
         CapsuleResponse response = timeCapsuleService.getCapsule(capsuleId, userId);
 

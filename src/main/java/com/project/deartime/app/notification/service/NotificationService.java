@@ -14,7 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -31,7 +30,7 @@ public class NotificationService {
     /**
      * 알림 생성 및 웹소켓 전송
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public NotificationResponse createAndSendNotification(
             User receiver,
             NotificationType type,
@@ -90,7 +89,7 @@ public class NotificationService {
     /**
      * 편지 수신 알림
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void notifyLetterReceived(User receiver, Long letterId, String senderNickname, String letterTitle) {
         createAndSendNotification(
                 receiver,
@@ -104,7 +103,7 @@ public class NotificationService {
     /**
      * 타임캡슐 수신 알림
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void notifyCapsuleReceived(User receiver, Long capsuleId, String senderNickname, String capsuleTitle) {
         createAndSendNotification(
                 receiver,
@@ -118,7 +117,7 @@ public class NotificationService {
     /**
      * 타임캡슐 오픈 알림
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void notifyCapsuleOpened(User receiver, Long capsuleId, String senderNickname, String capsuleTitle) {
         createAndSendNotification(
                 receiver,
@@ -132,7 +131,7 @@ public class NotificationService {
     /**
      * 친구 요청 알림
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void notifyFriendRequest(User receiver, Long requesterId, String requesterNickname) {
         createAndSendNotification(
                 receiver,
@@ -146,7 +145,7 @@ public class NotificationService {
     /**
      * 친구 수락 알림
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void notifyFriendAccept(User receiver, Long accepterId, String accepterNickname) {
         createAndSendNotification(
                 receiver,
@@ -206,4 +205,3 @@ public class NotificationService {
         log.info("[NOTIFICATION] 모든 알림 삭제. userId={}", userId);
     }
 }
-

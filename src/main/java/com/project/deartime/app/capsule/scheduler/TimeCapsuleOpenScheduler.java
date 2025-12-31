@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,13 +22,13 @@ public class TimeCapsuleOpenScheduler {
 
     private final TimeCapsuleRepository timeCapsuleRepository;
     private final NotificationService notificationService;
+    private final TransactionTemplate transactionTemplate;
 
     /**
      * 매 분마다 실행하여 오픈 시간이 된 캡슐을 확인하고 알림 발송
      * cron: 초 분 시 일 월 요일
      */
     @Scheduled(cron = "0 * * * * *") // 매 분 0초에 실행
-    @Transactional
     public void checkAndNotifyOpenedCapsules() {
         LocalDateTime now = LocalDateTime.now();
 
@@ -41,7 +41,24 @@ public class TimeCapsuleOpenScheduler {
         log.info("[SCHEDULER] 오픈 대기 중인 캡슐 {} 개 발견", capsulesReadyToOpen.size());
 
         for (TimeCapsule capsule : capsulesReadyToOpen) {
+            processIndividualCapsule(capsule.getId());
+        }
+    }
+
+    /**
+     * 개별 캡슐 알림 처리 - 각 캡슐별로 독립적인 트랜잭션으로 처리
+     * 하나의 실패가 전체 알림 발송에 영향을 주지 않음
+     */
+    private void processIndividualCapsule(Long capsuleId) {
+        transactionTemplate.executeWithoutResult(status -> {
             try {
+                TimeCapsule capsule = timeCapsuleRepository.findById(capsuleId)
+                        .orElse(null);
+
+                if (capsule == null || capsule.getIsNotified()) {
+                    return;
+                }
+
                 // 수신자에게 캡슐 오픈 알림 발송
                 notificationService.notifyCapsuleOpened(
                         capsule.getReceiver(),
@@ -52,13 +69,15 @@ public class TimeCapsuleOpenScheduler {
 
                 // 알림 발송 완료 표시
                 capsule.markAsNotified();
+                timeCapsuleRepository.save(capsule);
 
                 log.info("[SCHEDULER] 캡슐 오픈 알림 발송 완료. capsuleId={}, receiverId={}",
                         capsule.getId(), capsule.getReceiver().getId());
             } catch (Exception e) {
-                log.error("[SCHEDULER] 캡슐 오픈 알림 발송 실패. capsuleId={}", capsule.getId(), e);
+                log.error("[SCHEDULER] 캡슐 오픈 알림 발송 실패. capsuleId={}", capsuleId, e);
+                status.setRollbackOnly();
             }
-        }
+        });
     }
 }
 

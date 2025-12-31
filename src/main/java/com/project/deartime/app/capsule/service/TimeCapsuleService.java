@@ -72,35 +72,48 @@ public class TimeCapsuleService {
             imageUrl = s3Service.uploadFile(imageFile, CAPSULE_FOLDER);
         }
 
-        // 캡슐 생성
-        TimeCapsule capsule = TimeCapsule.builder()
-                .title(request.getTitle())
-                .content(request.getContent())
-                .theme(request.getTheme())
-                .imageUrl(imageUrl)
-                .openAt(request.getOpenAt())
-                .sender(senderUser)
-                .receiver(receiver)
-                .isNotified(false)
-                .build();
-
-        TimeCapsule savedCapsule = timeCapsuleRepository.save(capsule);
-
-        // 수신자에게 알림 발송 (캡슐 제목 포함)
         try {
-            notificationService.notifyCapsuleReceived(
-                    receiver,
-                    savedCapsule.getId(),
-                    senderUser.getNickname(),
-                    savedCapsule.getTitle()
-            );
+            // 캡슐 생성
+            TimeCapsule capsule = TimeCapsule.builder()
+                    .title(request.getTitle())
+                    .content(request.getContent())
+                    .theme(request.getTheme())
+                    .imageUrl(imageUrl)
+                    .openAt(request.getOpenAt())
+                    .sender(senderUser)
+                    .receiver(receiver)
+                    .isNotified(false)
+                    .build();
+
+            TimeCapsule savedCapsule = timeCapsuleRepository.save(capsule);
+
+            // 수신자에게 알림 발송 (캡슐 제목 포함)
+            try {
+                notificationService.notifyCapsuleReceived(
+                        receiver,
+                        savedCapsule.getId(),
+                        senderUser.getNickname(),
+                        savedCapsule.getTitle()
+                );
+            } catch (Exception e) {
+                log.error("[CAPSULE] 알림 발송 실패. capsuleId={}", savedCapsule.getId(), e);
+            }
+
+            log.info("[CAPSULE] 타임캡슐 생성. capsuleId={}, senderId={}", savedCapsule.getId(), senderId);
+
+            return CapsuleResponse.from(savedCapsule, true);
         } catch (Exception e) {
-            log.error("[CAPSULE] 알림 발송 실패. capsuleId={}", savedCapsule.getId(), e);
+            // DB 저장 실패 시 S3에 업로드된 이미지 삭제
+            if (imageUrl != null) {
+                try {
+                    s3Service.deleteFile(imageUrl);
+                    log.info("[CAPSULE] S3 이미지 롤백 완료. imageUrl={}", imageUrl);
+                } catch (Exception s3Exception) {
+                    log.error("[CAPSULE] S3 이미지 롤백 실패. imageUrl={}", imageUrl, s3Exception);
+                }
+            }
+            throw e;
         }
-
-        log.info("[CAPSULE] 타임캡슐 생성. capsuleId={}, senderId={}", savedCapsule.getId(), senderId);
-
-        return CapsuleResponse.from(savedCapsule, true);
     }
 
     /**

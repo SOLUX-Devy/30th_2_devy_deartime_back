@@ -9,6 +9,7 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -52,9 +53,11 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                     log.info("[WEBSOCKET] JWT 인증 성공. userId={}, email={}", userId, email);
                 } else {
                     log.warn("[WEBSOCKET] 유효하지 않은 JWT 토큰");
+                    throw new AccessDeniedException("유효하지 않은 JWT 토큰입니다.");
                 }
             } else {
                 log.warn("[WEBSOCKET] Authorization 헤더가 없거나 Bearer 형식이 아님");
+                throw new AccessDeniedException("WebSocket 연결에 유효한 Authorization 헤더가 필요합니다.");
             }
         }
 

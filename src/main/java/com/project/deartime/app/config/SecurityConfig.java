@@ -116,7 +116,13 @@ public class SecurityConfig {
                 "http://localhost:8080"
         ));
         */
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));// 개발 환경에서는 모든 origin 허용 (file:// 포함)
+        // TODO: 프로덕션 환경에서는 반드시 특정 도메인만 허용하도록 변경 필요
+        // 보안 경고: "*" 패턴은 개발 환경에서만 사용해야 합니다.
+        // configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:3000",
+                "http://localhost:8080"
+        )); // 개발 환경 허용 도메인 (프로덕션에서는 실제 도메인으로 변경 필요)
 
         configuration.setAllowedMethods(Arrays.asList(
                 "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
