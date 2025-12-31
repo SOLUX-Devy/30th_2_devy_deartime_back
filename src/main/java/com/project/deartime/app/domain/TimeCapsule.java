@@ -27,6 +27,9 @@ public class TimeCapsule extends BaseTimeEntity {
     @Column(name = "theme", length = 50)
     private String theme;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(name = "open_at", nullable = false)
     private LocalDateTime openAt;
 
