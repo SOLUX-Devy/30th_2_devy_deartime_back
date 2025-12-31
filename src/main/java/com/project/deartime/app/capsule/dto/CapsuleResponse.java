@@ -1,5 +1,4 @@
 package com.project.deartime.app.capsule.dto;
-
 import com.project.deartime.app.domain.TimeCapsule;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +12,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class CapsuleResponse {
+
     private Long id;
 
     private String title;
@@ -26,7 +26,7 @@ public class CapsuleResponse {
     private LocalDateTime openAt;
 
     private Boolean isNotified;
-
+    
     private Long senderId;
 
     private String senderNickname;
@@ -52,7 +52,7 @@ public class CapsuleResponse {
         return CapsuleResponse.builder()
                 .id(capsule.getId())
                 .title(capsule.getTitle())
-                .content(isOpened || canAccess ? capsule.getContent() : null)
+                .content(canAccess ? capsule.getContent() : null)
                 .theme(capsule.getTheme())
                 .imageUrl(capsule.getImageUrl())
                 .openAt(capsule.getOpenAt())
