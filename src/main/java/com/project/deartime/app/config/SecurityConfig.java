@@ -110,19 +110,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        /*
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",
-                "http://localhost:8080"
-        ));
-        */
-        // TODO: 프로덕션 환경에서는 반드시 특정 도메인만 허용하도록 변경 필요
-        // 보안 경고: "*" 패턴은 개발 환경에서만 사용해야 합니다.
-        // configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        // TODO: 프로덕션 환경에서는 반드시 실제 도메인으로 변경 필요
         configuration.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:3000",
                 "http://localhost:8080"
-        )); // 개발 환경 허용 도메인 (프로덕션에서는 실제 도메인으로 변경 필요)
+        ));
+        //원래는 configuration.setAllowedOriginPatterns(Arrays.asList("*"))가 개발용;
 
         configuration.setAllowedMethods(Arrays.asList(
                 "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"

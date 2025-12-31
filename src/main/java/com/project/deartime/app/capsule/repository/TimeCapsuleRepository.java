@@ -4,6 +4,7 @@ import com.project.deartime.app.domain.TimeCapsule;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -36,6 +37,15 @@ public interface TimeCapsuleRepository extends JpaRepository<TimeCapsule, Long> 
      */
     @Query("SELECT tc FROM TimeCapsule tc WHERE tc.openAt <= :now AND tc.isNotified = false")
     List<TimeCapsule> findCapsulesReadyToOpen(@Param("now") LocalDateTime now);
+
+    /**
+     * Atomic Update: isNotified를 false에서 true로 변경
+     * 동시성 문제 해결을 위해 조건부 업데이트 수행
+     * @return 업데이트된 행 수 (1이면 성공, 0이면 이미 처리됨)
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE TimeCapsule tc SET tc.isNotified = true WHERE tc.id = :id AND tc.isNotified = false")
+    int updateIsNotifiedToTrue(@Param("id") Long id);
 }
 
 

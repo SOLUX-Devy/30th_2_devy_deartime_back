@@ -189,8 +189,7 @@ public class FriendService {
 
         // 요청자(friendId)에게 친구 수락 알림 발송
         try {
-            User currentUser = userRepository.findById(userId)
-                    .orElseThrow(() -> new CoreApiException(ErrorCode.USER_NOT_FOUND));
+            User currentUser = friendRequest.getFriend(); // 수락한 사람 (이미 조회된 엔티티)
             User requester = friendRequest.getUser(); // 원래 요청을 보낸 사람
             notificationService.notifyFriendAccept(requester, currentUser.getId(), currentUser.getNickname());
         } catch (Exception e) {

@@ -81,7 +81,8 @@ public class NotificationService {
      * 알림 메시지 생성
      */
     private String buildNotificationContent(NotificationType type, String senderNickname) {
-        return senderNickname + "님이 " + type.getDefaultMessage();
+        String nickname = (senderNickname != null) ? senderNickname : "알 수 없음";
+        return nickname + "님이 " + type.getDefaultMessage();
     }
 
     // ========== 알림 트리거 메서드들 ==========

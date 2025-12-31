@@ -29,7 +29,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     /**
      * 사용자의 모든 알림 삭제
      */
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM Notification n WHERE n.user.id = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
 

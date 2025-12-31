@@ -47,15 +47,27 @@ public class TimeCapsuleOpenScheduler {
 
     /**
      * 개별 캡슐 알림 처리 - 각 캡슐별로 독립적인 트랜잭션으로 처리
-     * 하나의 실패가 전체 알림 발송에 영향을 주지 않음
+     * Atomic Update를 통해 동시성 문제(Race Condition) 해결
      */
     private void processIndividualCapsule(Long capsuleId) {
         transactionTemplate.executeWithoutResult(status -> {
             try {
+                // Atomic Update: isNotified가 false인 경우에만 true로 업데이트
+                // 동시에 여러 스케줄러가 실행되더라도 하나만 성공
+                int updatedCount = timeCapsuleRepository.updateIsNotifiedToTrue(capsuleId);
+
+                if (updatedCount == 0) {
+                    // 이미 다른 스케줄러/프로세스에서 처리됨
+                    log.debug("[SCHEDULER] 캡슐 이미 처리됨. capsuleId={}", capsuleId);
+                    return;
+                }
+
+                // 업데이트 성공 시에만 알림 발송
                 TimeCapsule capsule = timeCapsuleRepository.findById(capsuleId)
                         .orElse(null);
 
-                if (capsule == null || capsule.getIsNotified()) {
+                if (capsule == null) {
+                    log.warn("[SCHEDULER] 캡슐을 찾을 수 없음. capsuleId={}", capsuleId);
                     return;
                 }
 
@@ -67,9 +79,6 @@ public class TimeCapsuleOpenScheduler {
                         capsule.getTitle()
                 );
 
-                // 알림 발송 완료 표시
-                capsule.markAsNotified();
-                timeCapsuleRepository.save(capsule);
 
                 log.info("[SCHEDULER] 캡슐 오픈 알림 발송 완료. capsuleId={}, receiverId={}",
                         capsule.getId(), capsule.getReceiver().getId());

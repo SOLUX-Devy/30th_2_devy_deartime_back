@@ -7,7 +7,6 @@ import com.project.deartime.global.dto.PageResponse;
 import com.project.deartime.global.exception.SuccessCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,12 +24,12 @@ public class NotificationController {
 
     /**
      * 알림 목록 조회 (GET /api/notifications)
-     * - 읽지 않은 알림 우선, 최신순 정렬
+     * - 읽지 않은 알림 우선, 최신순 정렬 (Repository 쿼리에서 정렬)
      */
     @GetMapping
     public ResponseEntity<ApiResponseTemplete<PageResponse<NotificationResponse>>> getNotifications(
             @AuthenticationPrincipal String userId,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 20) Pageable pageable
     ) {
         Long userIdLong = Long.parseLong(userId);
         PageResponse<NotificationResponse> response = notificationService.getNotifications(userIdLong, pageable);

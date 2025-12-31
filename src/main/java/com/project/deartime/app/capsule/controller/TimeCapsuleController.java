@@ -19,29 +19,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/capsules")
+@RequestMapping("/api/timecapsules")
 @RequiredArgsConstructor
 public class TimeCapsuleController {
 
     private final TimeCapsuleService timeCapsuleService;
     private final UserRepository userRepository;
-
-    /**
-     * Authentication에서 사용자 ID를 안전하게 파싱
-     */
-    private Long parseUserId(Authentication authentication) {
-        try {
-            return Long.parseLong(authentication.getName());
-        } catch (NumberFormatException e) {
-            throw new CoreApiException(ErrorCode.INVALID_ID_EXCEPTION, "사용자 ID 파싱에 실패했습니다.");
-        }
-    }
 
     /**
      * 타임캡슐 생성
@@ -50,13 +39,13 @@ public class TimeCapsuleController {
     public ResponseEntity<ApiResponseTemplete<CapsuleResponse>> createCapsule(
             @Valid @RequestPart(value = "request") CreateCapsuleRequest request,
             @RequestPart(value = "imageFile", required = false) MultipartFile imageFile,
-            Authentication authentication) {
+            @AuthenticationPrincipal String userId) {
 
-        Long userId = parseUserId(authentication);
-        var user = userRepository.findById(userId)
+        Long userIdLong = Long.parseLong(userId);
+        var user = userRepository.findById(userIdLong)
                 .orElseThrow(() -> new CoreApiException(ErrorCode.USER_NOT_FOUND));
 
-        CapsuleResponse response = timeCapsuleService.createCapsule(userId, request, imageFile, user);
+        CapsuleResponse response = timeCapsuleService.createCapsule(userIdLong, request, imageFile, user);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -75,28 +64,21 @@ public class TimeCapsuleController {
     public ResponseEntity<ApiResponseTemplete<PageResponse<CapsuleResponse>>> getCapsules(
             @RequestParam(required = false) CapsuleType type,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
-            Authentication authentication) {
+            @AuthenticationPrincipal String userId) {
 
-        Long userId = Long.parseLong(authentication.getName());
+        Long userIdLong = Long.parseLong(userId);
 
-        try {
-            Page<CapsuleResponse> page = timeCapsuleService.getCapsulesByType(userId, type, pageable);
-            PageResponse<CapsuleResponse> pageResponse = PageResponse.from(page);
+        Page<CapsuleResponse> page = timeCapsuleService.getCapsulesByType(userIdLong, type, pageable);
+        PageResponse<CapsuleResponse> pageResponse = PageResponse.from(page);
 
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(ApiResponseTemplete.<PageResponse<CapsuleResponse>>builder()
-                            .status(HttpStatus.OK.value())
-                            .success(true)
-                            .message(SuccessCode.CAPSULE_LIST_SUCCESS.getMessage())
-                            .data(pageResponse)
-                            .build());
-        } catch (CoreApiException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("[CAPSULE] 캡슐 목록 조회 실패", e);
-            throw new CoreApiException(ErrorCode.INTERNAL_SERVER_ERROR);
-        }
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponseTemplete.<PageResponse<CapsuleResponse>>builder()
+                        .status(HttpStatus.OK.value())
+                        .success(true)
+                        .message(SuccessCode.CAPSULE_LIST_SUCCESS.getMessage())
+                        .data(pageResponse)
+                        .build());
     }
 
     /**
@@ -105,11 +87,11 @@ public class TimeCapsuleController {
     @GetMapping("/{capsuleId}")
     public ResponseEntity<ApiResponseTemplete<CapsuleResponse>> getCapsule(
             @PathVariable Long capsuleId,
-            Authentication authentication) {
+            @AuthenticationPrincipal String userId) {
 
-        Long userId = parseUserId(authentication);
+        Long userIdLong = Long.parseLong(userId);
 
-        CapsuleResponse response = timeCapsuleService.getCapsule(capsuleId, userId);
+        CapsuleResponse response = timeCapsuleService.getCapsule(capsuleId, userIdLong);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -121,4 +103,3 @@ public class TimeCapsuleController {
                         .build());
     }
 }
-
