@@ -88,7 +88,15 @@ public enum ErrorCode {
     // S3
     S3_FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3 파일 삭제에 실패했습니다."),
     S3_FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3 파일 업로드에 실패했습니다."),
-    INVALID_S3_FILE_URL(HttpStatus.BAD_REQUEST, "유효하지 않은 S3 파일 URL입니다.")
+    INVALID_S3_FILE_URL(HttpStatus.BAD_REQUEST, "유효하지 않은 S3 파일 URL입니다."),
+
+    // TimeCapsule
+    CAPSULE_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 타임캡슐을 찾을 수 없습니다."),
+    CAPSULE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "타임캡슐에 접근할 권한이 없습니다."),
+    CAPSULE_NOT_OPENED(HttpStatus.FORBIDDEN, "아직 열어볼 수 없습니다."),
+    CAPSULE_RECEIVER_NOT_FRIEND(HttpStatus.BAD_REQUEST, "받는 사람이 친구가 아닙니다."),
+    INVALID_CAPSULE_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 캡슐 타입입니다."),
+    CAPSULE_SELF_SEND(HttpStatus.BAD_REQUEST, "자신에게 캡슐을 보낼 수 없습니다.")
     ;
 
     private final HttpStatus httpStatus;

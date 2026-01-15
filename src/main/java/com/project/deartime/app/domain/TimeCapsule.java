@@ -27,10 +27,14 @@ public class TimeCapsule extends BaseTimeEntity {
     @Column(name = "theme", length = 50)
     private String theme;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(name = "open_at", nullable = false)
     private LocalDateTime openAt;
 
     @Column(name = "is_notified", nullable = false)
+    @Builder.Default
     private Boolean isNotified = false;
 
     // N:1 관계: senderId (보낸 사람)
@@ -42,4 +46,11 @@ public class TimeCapsule extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
+
+    /**
+     * 알림 발송 완료 처리
+     */
+    public void markAsNotified() {
+        this.isNotified = true;
+    }
 }
