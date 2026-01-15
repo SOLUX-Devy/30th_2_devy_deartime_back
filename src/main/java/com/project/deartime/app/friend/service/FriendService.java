@@ -62,13 +62,19 @@ public class FriendService {
     }
 
     /**
-     * 닉네임으로 친구 검색
+     * 이메일로 친구 검색 (정확히 일치하는 이메일만)
      */
-    public List<FriendSearchResponse> searchFriendsByNickname(Long currentUserId, String keyword) {
-        List<User> searchedUsers = userRepository.searchByNickname(keyword, currentUserId);
+    public List<FriendSearchResponse> searchFriendsByNickname(Long currentUserId, String email) {
         List<FriendSearchResponse> responses = new ArrayList<>();
 
-        for (User user : searchedUsers) {
+        // 이메일로 사용자 검색 (본인 제외)
+        Optional<User> userOptional = userRepository.findByEmailAndNotCurrentUser(
+                email.trim(),
+                currentUserId
+        );
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
             String friendStatus = determineFriendStatus(currentUserId, user.getId());
 
             FriendSearchResponse response = FriendSearchResponse.builder()
@@ -189,8 +195,8 @@ public class FriendService {
 
         // 요청자(friendId)에게 친구 수락 알림 발송
         try {
-            User currentUser = friendRequest.getFriend(); // 수락한 사람 (이미 조회된 엔티티)
-            User requester = friendRequest.getUser(); // 원래 요청을 보낸 사람
+            User currentUser = friendRequest.getFriend();
+            User requester = friendRequest.getUser();
             notificationService.notifyFriendAccept(requester, currentUser.getId(), currentUser.getNickname());
         } catch (Exception e) {
             log.error("[FRIEND] 친구 수락 알림 발송 실패. userId={}, friendId={}", userId, friendId, e);

@@ -2,6 +2,7 @@ package com.project.deartime.app.friend.repository;
 
 import com.project.deartime.app.domain.Friend;
 import com.project.deartime.app.domain.FriendId;
+import com.project.deartime.app.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

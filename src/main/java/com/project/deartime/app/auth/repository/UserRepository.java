@@ -19,4 +19,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "AND u.id != :currentUserId")
     List<User> searchByNickname(@Param("keyword") String keyword,
                                 @Param("currentUserId") Long currentUserId);
+
+    @Query("SELECT u FROM User u WHERE u.email = :email AND u.id != :currentUserId")
+    Optional<User> findByEmailAndNotCurrentUser(
+            @Param("email") String email,
+            @Param("currentUserId") Long currentUserId
+    );
 }

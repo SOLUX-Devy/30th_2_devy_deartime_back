@@ -44,8 +44,8 @@ public class FriendController {
     }
 
     /**
-     * 친구 닉네임 검색
-     * GET /api/friends/search?keyword={닉네임}
+     * 친구 이메일 검색
+     * GET /api/friends/search?keyword={이메일}
      */
     @GetMapping("/search")
     public ResponseEntity<ApiResponseTemplete<FriendSearchListResponse>> searchFriends(
