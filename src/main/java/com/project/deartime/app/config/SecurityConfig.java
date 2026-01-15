@@ -116,10 +116,10 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:3000",      // 프론트 로컬 개발
                 "http://localhost:8080",      // 백엔드 로컬
-                "http://43.203.87.207:8080"  // 백엔드 배포
+                "http://43.203.87.207:8080",  // 백엔드 배포
                 // TODO: 프론트엔드 배포 주소 추가 (예시)
+                "https://30th-2-devy-deartime-front.vercel.app"
                 // "https://deartime.vercel.app",
-                // "https://your-frontend-domain.com"
         ));
 
         configuration.setAllowedMethods(Arrays.asList(
