@@ -63,14 +63,14 @@ public class LetterService {
             if (themeOptional.isPresent()) {
                 theme = themeOptional.get();
             } else {
-                warningMessage = String.format("요청하신 테마 코드 '%s'를 찾을 수 없어 'DEFAULT' 테마로 대체하여 저장됩니다.", requestedThemeCode);
+                warningMessage = String.format("요청하신 테마 코드 '%s'를 찾을 수 없어 'theme1' 테마로 대체하여 저장됩니다.", requestedThemeCode);
             }
         } else {
-            warningMessage = "테마를 지정하지 않아 'DEFAULT' 테마로 저장됩니다.";
+            warningMessage = "테마를 지정하지 않아 'theme1' 테마로 저장됩니다.";
         }
 
         if (theme == null) {
-            theme = letterThemeRepository.findByCode("DEFAULT")
+            theme = letterThemeRepository.findByCode("theme1")
                     .orElseThrow(() ->
                             new CoreApiException(ErrorCode.LETTER_DEFAULT_NOT_FOUND)
                     );
