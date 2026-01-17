@@ -36,7 +36,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws-stomp")
                 .setAllowedOriginPatterns(
                         "http://localhost:3000",
-                        "http://localhost:8080"
+                        "http://localhost:8080",
+                        "http://43.203.87.207:8080",  //백엔드 서버 IP (API 테스트용)
+                        "https://30th-2-devy-deartime-front.vercel.app"
                 )
                 .withSockJS();
     }
