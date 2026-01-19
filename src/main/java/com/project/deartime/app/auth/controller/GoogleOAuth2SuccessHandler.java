@@ -21,7 +21,6 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
-    // 프론트엔드 콜백 URL
     private static final String FRONTEND_CALLBACK_URL = "https://30th-2-devy-deartime-front.vercel.app/oauth/callback";
 
     @Override
@@ -45,12 +44,13 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             System.out.println("=== 로그인 성공 ===");
             System.out.println("Access Token: " + accessToken);
             System.out.println("Refresh Token: " + refreshToken);
+            System.out.println("Email: " + user.getEmail());
 
-            // 프론트엔드로 리다이렉트 (쿼리 파라미터로 토큰 전달)
-            String redirectUrl = String.format("%s?accessToken=%s&refreshToken=%s&status=success",
+            String redirectUrl = String.format("%s?accessToken=%s&refreshToken=%s&email=%s&status=success",
                     FRONTEND_CALLBACK_URL,
                     URLEncoder.encode(accessToken, StandardCharsets.UTF_8),
-                    URLEncoder.encode(refreshToken, StandardCharsets.UTF_8)
+                    URLEncoder.encode(refreshToken, StandardCharsets.UTF_8),
+                    URLEncoder.encode(user.getEmail(), StandardCharsets.UTF_8)
             );
 
             response.sendRedirect(redirectUrl);
@@ -62,7 +62,6 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             System.out.println("=== 신규 유저 - 임시 토큰 발급 ===");
             System.out.println("Temp Token: " + tempToken);
 
-            // 프론트엔드로 리다이렉트 (쿼리 파라미터로 임시 토큰 전달)
             String redirectUrl = String.format("%s?tempToken=%s&status=signup",
                     FRONTEND_CALLBACK_URL,
                     URLEncoder.encode(tempToken, StandardCharsets.UTF_8)

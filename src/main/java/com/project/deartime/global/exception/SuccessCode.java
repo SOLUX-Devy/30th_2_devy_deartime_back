@@ -67,6 +67,9 @@ public enum SuccessCode {
     NOTIFICATION_READ_SUCCESS(HttpStatus.OK, "알림 읽음 처리 성공"),
     NOTIFICATION_DELETE_SUCCESS(HttpStatus.OK, "알림 삭제 성공"),
 
+    NICKNAME_AVAILABLE(HttpStatus.OK, "사용 가능한 닉네임입니다."),
+    NICKNAME_UNAVAILABLE(HttpStatus.OK, "이미 사용 중인 닉네임입니다."),
+
     ;
 
     private final HttpStatus httpStatus;

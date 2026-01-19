@@ -18,9 +18,14 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final S3Service s3Service;  // 추가
+    private final S3Service s3Service;
 
-    // MultipartFile 파라미터 추가
+    // ✅ 닉네임 중복 확인 메서드 추가
+    @Transactional(readOnly = true)
+    public boolean isNicknameAvailable(String nickname) {
+        return !userRepository.existsByNickname(nickname);
+    }
+
     public User signUp(String providerId, String email, SignUpRequest request, MultipartFile profileImage) {
         System.out.println("=== 회원가입 시작 ===");
         System.out.println("providerId: " + providerId);
@@ -44,7 +49,7 @@ public class UserService {
                 .nickname(request.getNickname())
                 .birthDate(request.getBirthDate())
                 .bio(request.getBio())
-                .profileImageUrl(profileImageUrl)  // S3 URL 저장
+                .profileImageUrl(profileImageUrl)
                 .build();
 
         User savedUser = userRepository.save(user);
@@ -60,7 +65,6 @@ public class UserService {
                 .orElseThrow(() -> new CoreApiException(ErrorCode.USER_NOT_FOUND));
     }
 
-    // MultipartFile 파라미터 추가
     public User updateProfile(Long userId, UpdateProfileRequest request, MultipartFile profileImage) {
         System.out.println("=== 프로필 업데이트 시작 ===");
 
@@ -74,7 +78,7 @@ public class UserService {
         }
 
         // 프로필 이미지 업데이트 처리
-        String profileImageUrl = user.getProfileImageUrl();  // 기존 URL 유지
+        String profileImageUrl = user.getProfileImageUrl();
         if (profileImage != null && !profileImage.isEmpty()) {
             // 기존 이미지가 있으면 삭제
             if (user.getProfileImageUrl() != null) {
