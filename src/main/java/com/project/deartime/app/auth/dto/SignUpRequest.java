@@ -15,7 +15,4 @@ public class SignUpRequest {
     private LocalDate birthDate;
 
     private String bio;
-
-    // profileImageUrl은 선택 사항으로 변경
-    private String profileImageUrl;
 }
