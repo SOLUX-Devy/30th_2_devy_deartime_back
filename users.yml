@@ -1,0 +1,10 @@
+# dozzle 을 위한 users.yml
+users:
+  dev-team:
+    name: Backend Team
+    email: devy@email.com
+    password: $2a$11$Un6rEI.IafreHN0MR/x/8.6xzlf/B1dYpMfPlECK7RyHsLytSYFDW
+    roles:
+      - download  # 로그 다운로드 허용
+      - connect   # 셸 접속 허용
+      # actions (재시작/종료) 권한은 없음
