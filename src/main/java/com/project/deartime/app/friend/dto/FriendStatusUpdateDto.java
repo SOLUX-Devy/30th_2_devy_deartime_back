@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class FriendStatusUpdateDto {
 
     @NotBlank(message = "상태값을 입력해주세요.")
-    @Pattern(regexp = "^(accepted|rejected|blocked)$",
-            message = "상태값은 accepted, rejected, blocked 중 하나여야 합니다.")
+    @Pattern(regexp = "^(accepted|rejected)$",
+            message = "상태값은 accepted, rejected 중 하나여야 합니다.")
     private String status;
 }
