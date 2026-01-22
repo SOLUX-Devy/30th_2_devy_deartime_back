@@ -115,6 +115,7 @@ public class SecurityConfig {
         // 프로덕션 배포 시 프론트엔드 주소 추가 필요!
         configuration.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:3000",      // 프론트 로컬 개발
+                "http://localhost:5173",      // 프론트 로컬 개발 (Vite)
                 "http://localhost:8080",      // 백엔드 로컬
                 "http://43.203.87.207:8080",  // 백엔드 배포
                 // TODO: 프론트엔드 배포 주소 추가 (예시)
