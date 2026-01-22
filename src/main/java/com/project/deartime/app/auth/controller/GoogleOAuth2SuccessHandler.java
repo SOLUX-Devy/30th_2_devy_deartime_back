@@ -40,8 +40,14 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             frontendUrl = "http://localhost:5173";
         } else if (referer != null && referer.contains("localhost")) {
             frontendUrl = "http://localhost:5173";
-        } else {
+            // 2. 아직 도메인 연결 안 된 프론트엔드 (Vercel 기본 주소)
+        } else if (referer != null && referer.contains("vercel.app")) {
+            // "vercel.app"에서 왔으면 다시 거기로 보내줌
             frontendUrl = "https://30th-2-devy-deartime-front.vercel.app";
+            // 3. 정식 배포 환경 (새 도메인)
+        } else {
+            // 그 외의 모든 경우(나중에 도메인 연결되면 여기로 옴)는 정식 도메인으로
+            frontendUrl = "https://deartime.kr";
         }
 
         String callbackUrl = frontendUrl + "/oauth/callback";
