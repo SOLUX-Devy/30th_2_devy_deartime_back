@@ -109,6 +109,7 @@ public class UserController {
         userData.put("birthDate", user.getBirthDate());
         userData.put("bio", user.getBio());
         userData.put("profileImageUrl", user.getProfileImageUrl());
+        userData.put("createdAt", user.getCreatedAt());
 
         return ApiResponseTemplete.success(SuccessCode.USER_INFO_RETRIEVED, userData);
     }
