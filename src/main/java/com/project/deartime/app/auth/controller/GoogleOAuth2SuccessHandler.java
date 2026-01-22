@@ -21,8 +21,6 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
-    private static final String FRONTEND_CALLBACK_URL = "https://30th-2-devy-deartime-front.vercel.app/oauth/callback";
-
     @Override
     public void onAuthenticationSuccess(
             HttpServletRequest request,
@@ -32,6 +30,21 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String providerId = oAuth2User.getAttribute("sub");
         String email = oAuth2User.getAttribute("email");
+
+        // 요청 헤더에서 Origin 또는 Referer를 확인하여 동적으로 리다이렉트 URL 결정
+        String origin = request.getHeader("Origin");
+        String referer = request.getHeader("Referer");
+
+        String frontendUrl;
+        if (origin != null && origin.contains("localhost")) {
+            frontendUrl = "http://localhost:5173";
+        } else if (referer != null && referer.contains("localhost")) {
+            frontendUrl = "http://localhost:5173";
+        } else {
+            frontendUrl = "https://30th-2-devy-deartime-front.vercel.app";
+        }
+
+        String callbackUrl = frontendUrl + "/oauth/callback";
 
         var optionalUser = userRepository.findByProviderId(providerId);
 
@@ -45,9 +58,10 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             System.out.println("Access Token: " + accessToken);
             System.out.println("Refresh Token: " + refreshToken);
             System.out.println("Email: " + user.getEmail());
+            System.out.println("Redirect URL: " + callbackUrl);
 
             String redirectUrl = String.format("%s?accessToken=%s&refreshToken=%s&email=%s&status=success",
-                    FRONTEND_CALLBACK_URL,
+                    callbackUrl,
                     URLEncoder.encode(accessToken, StandardCharsets.UTF_8),
                     URLEncoder.encode(refreshToken, StandardCharsets.UTF_8),
                     URLEncoder.encode(user.getEmail(), StandardCharsets.UTF_8)
@@ -61,9 +75,10 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 
             System.out.println("=== 신규 유저 - 임시 토큰 발급 ===");
             System.out.println("Temp Token: " + tempToken);
+            System.out.println("Redirect URL: " + callbackUrl);
 
             String redirectUrl = String.format("%s?tempToken=%s&status=signup",
-                    FRONTEND_CALLBACK_URL,
+                    callbackUrl,
                     URLEncoder.encode(tempToken, StandardCharsets.UTF_8)
             );
 
