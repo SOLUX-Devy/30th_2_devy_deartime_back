@@ -159,7 +159,7 @@ public class TimeCapsuleService {
      * @param userId 조회 사용자 ID
      * @return 캡슐 상세 정보
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public CapsuleResponse getCapsule(Long capsuleId, Long userId) {
         TimeCapsule capsule = timeCapsuleRepository.findById(capsuleId)
                 .orElseThrow(() -> new CoreApiException(ErrorCode.CAPSULE_NOT_FOUND));
@@ -178,6 +178,11 @@ public class TimeCapsuleService {
 
         // 3. 최종 접근 권한 확인
         boolean canAccess = canAccessCapsule(userId, capsule);
+
+        // 4. 읽음 처리: canAccess가 true이고 isOpened가 false인 경우 개봉 처리
+        if (canAccess && !capsule.getIsOpened()) {
+            capsule.openCapsule();
+        }
 
         return CapsuleResponse.from(capsule, canAccess);
     }
