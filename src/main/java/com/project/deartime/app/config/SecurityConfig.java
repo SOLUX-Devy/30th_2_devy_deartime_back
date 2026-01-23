@@ -48,7 +48,8 @@ public class SecurityConfig {
                                 "/actuator/health",  // Health Check 엔드포인트,
                                 "/favicon.ico",
                                 "/error",
-                                "/login/**"
+                                "/login/**",
+                                "/api/users/check-nickname"
                         ).permitAll()
                         .requestMatchers("/api/auth/logout").authenticated()
                         // 회원가입은 임시 토큰으로 접근
