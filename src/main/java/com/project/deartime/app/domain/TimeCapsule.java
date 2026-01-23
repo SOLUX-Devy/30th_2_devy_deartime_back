@@ -37,6 +37,10 @@ public class TimeCapsule extends BaseTimeEntity {
     @Builder.Default
     private Boolean isNotified = false;
 
+    @Column(name = "is_opened", nullable = false)
+    @Builder.Default
+    private Boolean isOpened = false;
+
     // N:1 관계: senderId (보낸 사람)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = false)
@@ -52,5 +56,12 @@ public class TimeCapsule extends BaseTimeEntity {
      */
     public void markAsNotified() {
         this.isNotified = true;
+    }
+
+    /**
+     * 캡슐 개봉 처리 (읽음 확인)
+     */
+    public void openCapsule() {
+        this.isOpened = true;
     }
 }
