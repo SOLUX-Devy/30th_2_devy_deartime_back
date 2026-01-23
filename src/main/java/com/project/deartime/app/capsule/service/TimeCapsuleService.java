@@ -46,20 +46,18 @@ public class TimeCapsuleService {
      */
     @Transactional
     public CapsuleResponse createCapsule(Long senderId, CreateCapsuleRequest request, MultipartFile imageFile, User senderUser) {
-        // 받는 사람이 존재하는지 확인
-        if (senderId.equals(request.getReceiverId())) {
-            throw new CoreApiException(ErrorCode.CAPSULE_SELF_SEND);
-        }
+        // 나 자신에게 보내기(Self-send)는 허용
+        // 친구 관계 확인은 보낸 사람과 받는 사람이 다를 때만 실행
+        if (!senderId.equals(request.getReceiverId())) {
+            boolean isFriend = friendRepository.existsByUserIdAndFriendIdAndStatus(
+                    senderId,
+                    request.getReceiverId(),
+                    "accepted"
+            );
 
-        // 친구 관계 확인
-        boolean isFriend = friendRepository.existsByUserIdAndFriendIdAndStatus(
-                senderId,
-                request.getReceiverId(),
-                "accepted"
-        );
-
-        if (!isFriend) {
-            throw new CoreApiException(ErrorCode.CAPSULE_RECEIVER_NOT_FRIEND);
+            if (!isFriend) {
+                throw new CoreApiException(ErrorCode.CAPSULE_RECEIVER_NOT_FRIEND);
+            }
         }
 
         // 받는 사람 조회
