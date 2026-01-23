@@ -100,7 +100,8 @@ public class UserController {
         System.out.println("=== 내 정보 조회 ===");
         System.out.println("userId: " + userId);
 
-        User user = userService.getUserById(Long.parseLong(userId));
+        Long userIdLong = Long.parseLong(userId);
+        User user = userService.getUserById(userIdLong);
 
         Map<String, Object> userData = new HashMap<>();
         userData.put("userId", user.getId());
@@ -110,6 +111,16 @@ public class UserController {
         userData.put("bio", user.getBio());
         userData.put("profileImageUrl", user.getProfileImageUrl());
         userData.put("createdAt", user.getCreatedAt());
+
+        // 대리인 정보 추가
+        Map<String, Object> proxyInfo = userService.getMyProxyInfo(userIdLong);
+        if (proxyInfo != null) {
+            userData.put("proxyNickname", proxyInfo.get("proxyNickname"));
+            userData.put("proxyUserId", proxyInfo.get("proxyUserId"));
+        } else {
+            userData.put("proxyNickname", null);
+            userData.put("proxyUserId", null);
+        }
 
         return ApiResponseTemplete.success(SuccessCode.USER_INFO_RETRIEVED, userData);
     }
