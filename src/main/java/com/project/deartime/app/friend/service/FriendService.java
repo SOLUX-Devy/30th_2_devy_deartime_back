@@ -62,13 +62,22 @@ public class FriendService {
     }
 
     /**
-     * 닉네임으로 친구 검색
+     * 이메일로 사용자 검색 + 친구 관계 상태 확인
+     * - 정확히 일치하는 이메일만 검색
+     * - 본인 제외
+     * - friendStatus: none, pending, received, accepted
      */
-    public List<FriendSearchResponse> searchFriendsByNickname(Long currentUserId, String keyword) {
-        List<User> searchedUsers = userRepository.searchByNickname(keyword, currentUserId);
+    public List<FriendSearchResponse> searchFriendsByEmail(Long currentUserId, String email) {
         List<FriendSearchResponse> responses = new ArrayList<>();
 
-        for (User user : searchedUsers) {
+        // 이메일로 사용자 검색 (본인 제외)
+        Optional<User> userOptional = userRepository.findByEmailAndNotCurrentUser(
+                email.trim(),
+                currentUserId
+        );
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
             String friendStatus = determineFriendStatus(currentUserId, user.getId());
 
             FriendSearchResponse response = FriendSearchResponse.builder()
@@ -87,6 +96,8 @@ public class FriendService {
 
     /**
      * 친구 추가 요청
+     * - 이미 관계가 있는 경우 적절한 예외 발생
+     * - 상대방이 이미 요청을 보낸 경우 자동 수락
      */
     @Transactional
     public FriendResponseDto sendFriendRequest(Long userId, Long friendId) {
@@ -123,6 +134,14 @@ public class FriendService {
                             .requestedAt(existing.getRequestedAt())
                             .build();
                     Friend savedFriend = friendRepository.save(existing);
+
+                    // 상대방에게 자동 수락 알림 발송
+                    try {
+                        notificationService.notifyFriendAccept(friend, user.getId(), user.getNickname());
+                    } catch (Exception e) {
+                        log.error("[FRIEND] 친구 자동 수락 알림 발송 실패. userId={}, friendId={}", userId, friendId, e);
+                    }
+
                     return FriendResponseDto.from(savedFriend);
                 }
 
@@ -131,10 +150,6 @@ public class FriendService {
                         existing.getFriend().getId().equals(friendId)) {
                     throw new CoreApiException(ErrorCode.FRIEND_REQUEST_ALREADY_SENT);
                 }
-            }
-
-            if ("blocked".equals(status)) {
-                throw new CoreApiException(ErrorCode.FRIEND_USER_BLOCKED);
             }
         }
 
@@ -189,8 +204,8 @@ public class FriendService {
 
         // 요청자(friendId)에게 친구 수락 알림 발송
         try {
-            User currentUser = friendRequest.getFriend(); // 수락한 사람 (이미 조회된 엔티티)
-            User requester = friendRequest.getUser(); // 원래 요청을 보낸 사람
+            User currentUser = friendRequest.getFriend();
+            User requester = friendRequest.getUser();
             notificationService.notifyFriendAccept(requester, currentUser.getId(), currentUser.getNickname());
         } catch (Exception e) {
             log.error("[FRIEND] 친구 수락 알림 발송 실패. userId={}, friendId={}", userId, friendId, e);
@@ -220,39 +235,6 @@ public class FriendService {
 
         // 4. 친구 요청 삭제
         friendRepository.delete(friendRequest);
-    }
-
-    /**
-     * 친구 차단
-     */
-    @Transactional
-    public FriendResponseDto blockFriend(Long userId, Long friendId) {
-        // 1. 사용자 확인
-        if (userId.equals(friendId)) {
-            throw new CoreApiException(ErrorCode.FRIEND_SELF_BLOCK);
-        }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CoreApiException(ErrorCode.USER_NOT_FOUND));
-
-        User friend = userRepository.findById(friendId)
-                .orElseThrow(() -> new CoreApiException(ErrorCode.FRIEND_NOT_FOUND));
-
-        // 2. 기존 관계 삭제 (양방향 모두)
-        List<Friend> existingRelations = friendRepository.findFriendshipBetween(userId, friendId);
-        friendRepository.deleteAll(existingRelations);
-
-        // 3. 차단 관계 생성 (userId -> friendId)
-        Friend blockedFriend = Friend.builder()
-                .user(user)
-                .friend(friend)
-                .status("blocked")
-                .requestedAt(LocalDateTime.now())
-                .build();
-
-        Friend savedFriend = friendRepository.save(blockedFriend);
-
-        return FriendResponseDto.from(savedFriend);
     }
 
     /**
@@ -358,6 +340,10 @@ public class FriendService {
 
     /**
      * 두 사용자 간의 친구 관계 상태 확인
+     * - none: 관계 없음
+     * - pending: 내가 요청 보냄
+     * - received: 상대방이 요청 보냄
+     * - accepted: 친구 관계
      */
     private String determineFriendStatus(Long userId1, Long userId2) {
         Optional<Friend> sentRequest = friendRepository.findByUserIdAndFriendId(userId1, userId2);

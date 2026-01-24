@@ -46,20 +46,18 @@ public class TimeCapsuleService {
      */
     @Transactional
     public CapsuleResponse createCapsule(Long senderId, CreateCapsuleRequest request, MultipartFile imageFile, User senderUser) {
-        // 받는 사람이 존재하는지 확인
-        if (senderId.equals(request.getReceiverId())) {
-            throw new CoreApiException(ErrorCode.CAPSULE_SELF_SEND);
-        }
+        // 나 자신에게 보내기(Self-send)는 허용
+        // 친구 관계 확인은 보낸 사람과 받는 사람이 다를 때만 실행
+        if (!senderId.equals(request.getReceiverId())) {
+            boolean isFriend = friendRepository.existsByUserIdAndFriendIdAndStatus(
+                    senderId,
+                    request.getReceiverId(),
+                    "accepted"
+            );
 
-        // 친구 관계 확인
-        boolean isFriend = friendRepository.existsByUserIdAndFriendIdAndStatus(
-                senderId,
-                request.getReceiverId(),
-                "accepted"
-        );
-
-        if (!isFriend) {
-            throw new CoreApiException(ErrorCode.CAPSULE_RECEIVER_NOT_FRIEND);
+            if (!isFriend) {
+                throw new CoreApiException(ErrorCode.CAPSULE_RECEIVER_NOT_FRIEND);
+            }
         }
 
         // 받는 사람 조회
@@ -161,7 +159,7 @@ public class TimeCapsuleService {
      * @param userId 조회 사용자 ID
      * @return 캡슐 상세 정보
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public CapsuleResponse getCapsule(Long capsuleId, Long userId) {
         TimeCapsule capsule = timeCapsuleRepository.findById(capsuleId)
                 .orElseThrow(() -> new CoreApiException(ErrorCode.CAPSULE_NOT_FOUND));
@@ -180,6 +178,11 @@ public class TimeCapsuleService {
 
         // 3. 최종 접근 권한 확인
         boolean canAccess = canAccessCapsule(userId, capsule);
+
+        // 4. 읽음 처리: canAccess가 true이고 isOpened가 false인 경우 개봉 처리
+        if (canAccess && !capsule.getIsOpened()) {
+            capsule.openCapsule();
+        }
 
         return CapsuleResponse.from(capsule, canAccess);
     }

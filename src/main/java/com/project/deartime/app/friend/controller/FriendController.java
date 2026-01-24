@@ -44,8 +44,8 @@ public class FriendController {
     }
 
     /**
-     * 친구 닉네임 검색
-     * GET /api/friends/search?keyword={닉네임}
+     * 친구 이메일 검색 (이메일로 사용자 조회 + 친구 관계 상태 확인)
+     * GET /api/friends/search?keyword={이메일}
      */
     @GetMapping("/search")
     public ResponseEntity<ApiResponseTemplete<FriendSearchListResponse>> searchFriends(
@@ -57,7 +57,7 @@ public class FriendController {
         }
 
         List<FriendSearchResponse> searchResults =
-                friendService.searchFriendsByNickname(
+                friendService.searchFriendsByEmail(
                         Long.parseLong(userId),
                         keyword.trim()
                 );
@@ -95,9 +95,9 @@ public class FriendController {
     }
 
     /**
-     * 친구 관계 상태 변경 (수락/거절/차단)
+     * 친구 관계 상태 변경 (수락/거절)
      * PUT /api/friends/{friendId}
-     * Body: { "status": "accepted" | "rejected" | "blocked" }
+     * Body: { "status": "accepted" | "rejected" }
      */
     @PutMapping("/{friendId}")
     public ResponseEntity<ApiResponseTemplete<Void>> updateFriendStatus(
@@ -125,16 +125,6 @@ public class FriendController {
                 );
                 return ApiResponseTemplete.success(
                         SuccessCode.FRIEND_REQUEST_REJECT_SUCCESS,
-                        null
-                );
-
-            case "blocked":
-                friendService.blockFriend(
-                        Long.parseLong(userId),
-                        friendId
-                );
-                return ApiResponseTemplete.success(
-                        SuccessCode.FRIEND_BLOCK_SUCCESS,
                         null
                 );
 

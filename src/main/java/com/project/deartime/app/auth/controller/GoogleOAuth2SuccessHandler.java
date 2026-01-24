@@ -11,7 +11,8 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Component
 @RequiredArgsConstructor
@@ -26,48 +27,68 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             HttpServletResponse response,
             Authentication authentication
     ) throws IOException {
-
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String providerId = oAuth2User.getAttribute("sub");
         String email = oAuth2User.getAttribute("email");
+
+        // 요청 헤더에서 Origin 또는 Referer를 확인하여 동적으로 리다이렉트 URL 결정
+        String origin = request.getHeader("Origin");
+        String referer = request.getHeader("Referer");
+
+        String frontendUrl;
+        if (origin != null && origin.contains("localhost")) {
+            frontendUrl = "http://localhost:5173";
+        } else if (referer != null && referer.contains("localhost")) {
+            frontendUrl = "http://localhost:5173";
+            // 2. 아직 도메인 연결 안 된 프론트엔드 (Vercel 기본 주소)
+        } else if (referer != null && referer.contains("vercel.app")) {
+            // "vercel.app"에서 왔으면 다시 거기로 보내줌
+            frontendUrl = "https://30th-2-devy-deartime-front.vercel.app";
+            // 3. 정식 배포 환경 (새 도메인)
+        } else {
+            // 그 외의 모든 경우(나중에 도메인 연결되면 여기로 옴)는 정식 도메인으로
+            frontendUrl = "https://deartime.kr";
+        }
+
+        String callbackUrl = frontendUrl + "/oauth/callback";
 
         var optionalUser = userRepository.findByProviderId(providerId);
 
         if (optionalUser.isPresent() && optionalUser.get().isRegistered()) {
             // 기존 유저 - 정식 토큰 발급
             User user = optionalUser.get();
-
             String accessToken = jwtTokenProvider.createAccessToken(user.getId().toString(), user.getEmail());
             String refreshToken = jwtTokenProvider.createRefreshToken(user.getId().toString());
 
             System.out.println("=== 로그인 성공 ===");
             System.out.println("Access Token: " + accessToken);
             System.out.println("Refresh Token: " + refreshToken);
+            System.out.println("Email: " + user.getEmail());
+            System.out.println("Redirect URL: " + callbackUrl);
 
-            response.setContentType("application/json;charset=UTF-8");
-            PrintWriter writer = response.getWriter();
-            writer.println("{");
-            writer.println("  \"status\": 200,");
-            writer.println("  \"message\": \"로그인 성공\",");
-            writer.println("  \"accessToken\": \"" + accessToken + "\",");
-            writer.println("  \"refreshToken\": \"" + refreshToken + "\"");
-            writer.println("}");
-            writer.flush();
+            String redirectUrl = String.format("%s?accessToken=%s&refreshToken=%s&email=%s&status=success",
+                    callbackUrl,
+                    URLEncoder.encode(accessToken, StandardCharsets.UTF_8),
+                    URLEncoder.encode(refreshToken, StandardCharsets.UTF_8),
+                    URLEncoder.encode(user.getEmail(), StandardCharsets.UTF_8)
+            );
+
+            response.sendRedirect(redirectUrl);
+
         } else {
             // 신규 유저 - 임시 토큰 발급 (회원가입용)
             String tempToken = jwtTokenProvider.createTempToken(providerId, email);
 
             System.out.println("=== 신규 유저 - 임시 토큰 발급 ===");
             System.out.println("Temp Token: " + tempToken);
+            System.out.println("Redirect URL: " + callbackUrl);
 
-            response.setContentType("application/json;charset=UTF-8");
-            PrintWriter writer = response.getWriter();
-            writer.println("{");
-            writer.println("  \"status\": 200,");
-            writer.println("  \"message\": \"신규 유저 (회원가입 필요)\",");
-            writer.println("  \"tempToken\": \"" + tempToken + "\"");
-            writer.println("}");
-            writer.flush();
+            String redirectUrl = String.format("%s?tempToken=%s&status=signup",
+                    callbackUrl,
+                    URLEncoder.encode(tempToken, StandardCharsets.UTF_8)
+            );
+
+            response.sendRedirect(redirectUrl);
         }
     }
 }

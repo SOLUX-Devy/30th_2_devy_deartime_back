@@ -3,7 +3,9 @@ package com.project.deartime.app.auth.Service;
 import com.project.deartime.app.auth.dto.SignUpRequest;
 import com.project.deartime.app.auth.dto.UpdateProfileRequest;
 import com.project.deartime.app.auth.repository.UserRepository;
+import com.project.deartime.app.domain.Proxy;
 import com.project.deartime.app.domain.User;
+import com.project.deartime.app.friend.repository.ProxyRepository;
 import com.project.deartime.app.service.S3Service;
 import com.project.deartime.global.exception.CoreApiException;
 import com.project.deartime.global.exception.ErrorCode;
@@ -12,15 +14,25 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class UserService {
 
     private final UserRepository userRepository;
-    private final S3Service s3Service;  // 추가
+    private final S3Service s3Service;
+    private final ProxyRepository proxyRepository;
 
-    // MultipartFile 파라미터 추가
+    // ✅ 닉네임 중복 확인 메서드 추가
+    @Transactional(readOnly = true)
+    public boolean isNicknameAvailable(String nickname) {
+        return !userRepository.existsByNickname(nickname);
+    }
+
     public User signUp(String providerId, String email, SignUpRequest request, MultipartFile profileImage) {
         System.out.println("=== 회원가입 시작 ===");
         System.out.println("providerId: " + providerId);
@@ -44,7 +56,7 @@ public class UserService {
                 .nickname(request.getNickname())
                 .birthDate(request.getBirthDate())
                 .bio(request.getBio())
-                .profileImageUrl(profileImageUrl)  // S3 URL 저장
+                .profileImageUrl(profileImageUrl)
                 .build();
 
         User savedUser = userRepository.save(user);
@@ -60,7 +72,6 @@ public class UserService {
                 .orElseThrow(() -> new CoreApiException(ErrorCode.USER_NOT_FOUND));
     }
 
-    // MultipartFile 파라미터 추가
     public User updateProfile(Long userId, UpdateProfileRequest request, MultipartFile profileImage) {
         System.out.println("=== 프로필 업데이트 시작 ===");
 
@@ -74,7 +85,7 @@ public class UserService {
         }
 
         // 프로필 이미지 업데이트 처리
-        String profileImageUrl = user.getProfileImageUrl();  // 기존 URL 유지
+        String profileImageUrl = user.getProfileImageUrl();
         if (profileImage != null && !profileImage.isEmpty()) {
             // 기존 이미지가 있으면 삭제
             if (user.getProfileImageUrl() != null) {
@@ -101,5 +112,30 @@ public class UserService {
         System.out.println("=== 프로필 업데이트 완료 ===");
 
         return user;
+    }
+
+    /**
+     * 사용자의 대리인 정보 조회
+     *
+     * @param userId 사용자 ID
+     * @return 대리인 정보 (닉네임, 유저 ID) 또는 null
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> getMyProxyInfo(Long userId) {
+        List<Proxy> proxies = proxyRepository.findByUserId(userId);
+
+        if (proxies == null || proxies.isEmpty()) {
+            return null;
+        }
+
+        // 첫 번째 대리인 정보 반환
+        Proxy proxy = proxies.get(0);
+        User proxyUser = proxy.getProxyUser();
+
+        Map<String, Object> proxyInfo = new HashMap<>();
+        proxyInfo.put("proxyNickname", proxyUser.getNickname());
+        proxyInfo.put("proxyUserId", proxyUser.getId());
+
+        return proxyInfo;
     }
 }

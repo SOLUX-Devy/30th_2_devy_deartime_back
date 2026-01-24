@@ -26,11 +26,32 @@ public class UserController {
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
 
+    // ✅ 닉네임 중복 확인 API 추가
+    @GetMapping("/check-nickname")
+    public ResponseEntity<ApiResponseTemplete<Map<String, Object>>> checkNickname(
+            @RequestParam String nickname
+    ) {
+        System.out.println("=== 닉네임 중복 확인 ===");
+        System.out.println("nickname: " + nickname);
+
+        boolean isAvailable = userService.isNicknameAvailable(nickname);
+
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("nickname", nickname);
+        responseData.put("isAvailable", isAvailable);
+
+        if (isAvailable) {
+            return ApiResponseTemplete.success(SuccessCode.NICKNAME_AVAILABLE, responseData);
+        } else {
+            return ApiResponseTemplete.success(SuccessCode.NICKNAME_UNAVAILABLE, responseData);
+        }
+    }
+
     @PostMapping("/signup")
     public ResponseEntity<ApiResponseTemplete<Map<String, Object>>> signUp(
             @RequestHeader("Authorization") String authHeader,
-            @RequestPart @Valid SignUpRequest request,  // @RequestBody -> @RequestPart
-            @RequestPart(required = false) MultipartFile profileImage,  // 추가
+            @RequestPart @Valid SignUpRequest request,
+            @RequestPart(required = false) MultipartFile profileImage,
             HttpServletResponse response
     ) {
         String tempToken = authHeader.replace("Bearer ", "");
@@ -47,7 +68,7 @@ public class UserController {
         System.out.println("email: " + email);
         System.out.println("profileImage: " + (profileImage != null ? profileImage.getOriginalFilename() : "없음"));
 
-        User user = userService.signUp(providerId, email, request, profileImage);  // profileImage 추가
+        User user = userService.signUp(providerId, email, request, profileImage);
 
         String accessToken = jwtTokenProvider.createAccessToken(user.getId().toString(), user.getEmail());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId().toString());
@@ -79,7 +100,8 @@ public class UserController {
         System.out.println("=== 내 정보 조회 ===");
         System.out.println("userId: " + userId);
 
-        User user = userService.getUserById(Long.parseLong(userId));
+        Long userIdLong = Long.parseLong(userId);
+        User user = userService.getUserById(userIdLong);
 
         Map<String, Object> userData = new HashMap<>();
         userData.put("userId", user.getId());
@@ -88,6 +110,17 @@ public class UserController {
         userData.put("birthDate", user.getBirthDate());
         userData.put("bio", user.getBio());
         userData.put("profileImageUrl", user.getProfileImageUrl());
+        userData.put("createdAt", user.getCreatedAt());
+
+        // 대리인 정보 추가
+        Map<String, Object> proxyInfo = userService.getMyProxyInfo(userIdLong);
+        if (proxyInfo != null) {
+            userData.put("proxyNickname", proxyInfo.get("proxyNickname"));
+            userData.put("proxyUserId", proxyInfo.get("proxyUserId"));
+        } else {
+            userData.put("proxyNickname", null);
+            userData.put("proxyUserId", null);
+        }
 
         return ApiResponseTemplete.success(SuccessCode.USER_INFO_RETRIEVED, userData);
     }
@@ -95,8 +128,8 @@ public class UserController {
     @PutMapping("/me")
     public ResponseEntity<ApiResponseTemplete<Map<String, Object>>> updateMyProfile(
             @AuthenticationPrincipal String userId,
-            @RequestPart @Valid UpdateProfileRequest request,  // @RequestBody -> @RequestPart
-            @RequestPart(required = false) MultipartFile profileImage  // 추가
+            @RequestPart @Valid UpdateProfileRequest request,
+            @RequestPart(required = false) MultipartFile profileImage
     ) {
         System.out.println("=== 프로필 업데이트 ===");
         System.out.println("userId: " + userId);
@@ -104,7 +137,7 @@ public class UserController {
         System.out.println("birthDate: " + request.getBirthDate());
         System.out.println("profileImage: " + (profileImage != null ? profileImage.getOriginalFilename() : "없음"));
 
-        User updatedUser = userService.updateProfile(Long.parseLong(userId), request, profileImage);  // profileImage 추가
+        User updatedUser = userService.updateProfile(Long.parseLong(userId), request, profileImage);
 
         Map<String, Object> userData = new HashMap<>();
         userData.put("userId", updatedUser.getId());

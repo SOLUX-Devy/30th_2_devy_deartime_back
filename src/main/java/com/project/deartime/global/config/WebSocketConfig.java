@@ -35,8 +35,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // TODO: 프로덕션 환경에서는 실제 도메인으로 변경 필요
         registry.addEndpoint("/ws-stomp")
                 .setAllowedOriginPatterns(
+                        "http://localhost:5173",
                         "http://localhost:3000",
-                        "http://localhost:8080"
+                        "http://localhost:8080",
+                        "http://43.203.87.207:8080",  //백엔드 서버 IP (API 테스트용)
+                        "https://30th-2-devy-deartime-front.vercel.app",
+                        "https://deartime.kr",         //프론트엔드 도메인
+                        "https://www.deartime.kr"
                 )
                 .withSockJS();
     }

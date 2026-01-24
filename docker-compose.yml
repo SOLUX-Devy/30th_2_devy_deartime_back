@@ -31,3 +31,17 @@ services:
 
     environment:
       DB_URL: jdbc:postgresql://db:5432/deartime?timeZone=Asia/Seoul
+
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: always
+    ports:
+      - "8888:8080"  # 외부 8888 -> 내부 8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./users.yml:/data/users.yml:ro  # 설정 파일 연결
+    environment:
+      DOZZLE_AUTH_PROVIDER: simple
+      DOZZLE_AUTH_TTL: 96h  # 로그인 4일 유지
