@@ -19,7 +19,7 @@ public enum SuccessCode {
     PHOTO_FETCH_SUCCESS(HttpStatus.OK, "사진(들)을 불러오는데 성공했습니다."),
     ALBUM_CREATE_SUCCESS(HttpStatus.OK, "앨범 생성에 성공했습니다."),
     ALBUM_LIST_FETCH_SUCCESS(HttpStatus.OK, "앨범(들)을 불러오는데 성공했습니다."),
-    ALBUM_TITLE_UPDATE_SUCCESS(HttpStatus.OK, "앨범 제목 수정에 성공했습니다."),
+    ALBUM_TITLE_UPDATE_SUCCESS(HttpStatus.OK, "앨범 수정에 성공했습니다."),
     ALBUM_PHOTO_ADD_SUCCESS(HttpStatus.OK, "앨범에 사진 추가에 성공했습니다."),
     ALBUM_PHOTOS_FETCH_SUCCESS(HttpStatus.OK, "앨범의 사진(들)을 불러오는데 성공했습니다."),
     PHOTO_LIST_FETCH_SUCCESS(HttpStatus.OK, "사진 목록을 불러오는데 성공했습니다."),

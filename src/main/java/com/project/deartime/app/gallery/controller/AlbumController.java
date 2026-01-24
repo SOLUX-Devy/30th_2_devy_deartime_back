@@ -71,7 +71,7 @@ public class AlbumController {
     }
 
     /**
-     * 앨범 이름 수정
+     * 앨범 이름 & 커버 수정
      * POST /api/albums/{albumId}/title
      */
     @PostMapping("/{albumId}/title")
@@ -83,7 +83,7 @@ public class AlbumController {
         Long myId = Long.parseLong(userId);
 
         AlbumDetailResponse response =
-                photoService.updateAlbumTitle(myId, albumId, request);
+                photoService.updateAlbumTitleAndCover(myId, albumId, request);
 
         return ApiResponseTemplete.success(
                 SuccessCode.ALBUM_TITLE_UPDATE_SUCCESS,

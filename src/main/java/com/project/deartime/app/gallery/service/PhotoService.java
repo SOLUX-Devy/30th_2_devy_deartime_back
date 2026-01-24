@@ -245,9 +245,9 @@ public class PhotoService {
     }
 
     /**
-     * 앨범 이름 수정
+     * 앨범 이름 & 커버 수정
      */
-    public AlbumDetailResponse updateAlbumTitle(Long userId, Long albumId, AlbumTitleUpdateRequest request) {
+    public AlbumDetailResponse updateAlbumTitleAndCover(Long userId, Long albumId, AlbumTitleUpdateRequest request) {
         Album album = albumRepository.findById(albumId)
                 .orElseThrow(() -> new CoreApiException(ErrorCode.RESOURCE_NOT_FOUND,
                         "앨범을 찾을 수 없습니다. albumId=" + albumId));
@@ -256,7 +256,23 @@ public class PhotoService {
             throw new AccessDeniedException("앨범 수정 권한이 없습니다.");
         }
 
+        Photo coverPhoto = null;
+
+        if (request.photoId() != null) {
+            coverPhoto = photoRepository.findById(request.photoId())
+                    .orElseThrow(() -> new CoreApiException(ErrorCode.RESOURCE_NOT_FOUND,
+                            "커버 사진을 찾을 수 없습니다. photoId=" + request.photoId()));
+
+            if (!coverPhoto.getUser().getId().equals(userId)) {
+                throw new AccessDeniedException("커버 사진 권한이 없습니다.");
+            }
+        }
+
         album.updateTitle(request.title());
+        if (coverPhoto != null) {
+            album.updateCoverPhoto(coverPhoto);
+        }
+
         return AlbumDetailResponse.fromEntity(albumRepository.save(album));
     }
 

@@ -83,7 +83,7 @@ public enum ErrorCode {
     LETTER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 컨텐츠에 접근하거나 조작할 권한이 없습니다."),
     LETTER_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 편지를 찾을 수 없습니다."),
     LETTER_THEME_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 편지 테마를 찾을 수 없습니다."),
-    LETTER_DEFAULT_NOT_FOUND(HttpStatus.NOT_FOUND, "기본 테마(DEFAULT)를 찾을 수 없습니다. DB를 확인해주세요."),
+    LETTER_DEFAULT_NOT_FOUND(HttpStatus.NOT_FOUND, "기본 테마(theme1)를 찾을 수 없습니다. DB를 확인해주세요."),
 
     // S3
     S3_FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3 파일 삭제에 실패했습니다."),
