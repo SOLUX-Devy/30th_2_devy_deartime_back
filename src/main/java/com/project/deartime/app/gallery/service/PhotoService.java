@@ -130,7 +130,7 @@ public class PhotoService {
     /**
      * 사진 목록 조회
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public PageResponse<PhotoListResponse> getPhotos(Long userId, Pageable pageable) {
         Album favoriteAlbum = getOrCreateFavoriteAlbum(userId);
 
@@ -249,7 +249,7 @@ public class PhotoService {
     /**
      * 앨범 목록 조회
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public List<AlbumListResponse> getAlbums(Long userId) {
         List<Album> albums = albumRepository.findAllByUserId(userId);
 
