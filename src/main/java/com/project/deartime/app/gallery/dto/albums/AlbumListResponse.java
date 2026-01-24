@@ -8,7 +8,7 @@ public record AlbumListResponse(
         Long userId,
         String title,
         String coverImageUrl,
-        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
         int photoCount
 ) {
     public static AlbumListResponse of(Album album, String coverImageUrl, int photoCount) {
@@ -17,7 +17,7 @@ public record AlbumListResponse(
                 album.getUser().getId(),
                 album.getTitle(),
                 coverImageUrl,
-                album.getCreatedAt(),
+                album.getUpdatedAt(),
                 photoCount
         );
     }

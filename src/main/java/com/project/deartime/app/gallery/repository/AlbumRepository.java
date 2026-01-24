@@ -21,4 +21,9 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
     Optional<Album> findFirstByTitleAndUserIdOrderByCreatedAtAsc(String title, Long userId);
 
     List<Album> findAllByUserId(Long userId);
+
+    @Query("SELECT a FROM Album a WHERE a.user.id = :userId " +
+            "ORDER BY CASE WHEN a.title = '즐겨찾기' THEN 0 ELSE 1 END ASC, " +
+            "a.updatedAt DESC, a.id DESC")
+    List<Album> findAllByUserIdWithOrdering(@Param("userId") Long userId);
 }

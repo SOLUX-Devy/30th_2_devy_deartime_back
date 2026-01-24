@@ -107,6 +107,7 @@ public class PhotoService {
                                     .photo(savedPhoto)
                                     .build()
                     );
+                    targetAlbum.renewTimestamp();
                 }
 
                 responses.add(
@@ -251,28 +252,26 @@ public class PhotoService {
      */
     @Transactional
     public List<AlbumListResponse> getAlbums(Long userId) {
-        List<Album> albums = albumRepository.findAllByUserId(userId);
+        List<Album> albums = albumRepository.findAllByUserIdWithOrdering(userId);
 
         return albums.stream()
                 .map(album -> {
-                    String coverUrl;
                     int photoCount = album.getAlbumPhotos().size();
-
-                    if ("즐겨찾기".equals(album.getTitle())) {
-                        coverUrl = albumPhotoRepository.findFirstByAlbumIdOrderByCreatedAtAsc(album.getId())
-                                .map(ap -> ap.getPhoto().getImageUrl())
-                                .orElse(null);
-                    }
-
-                    else {
-                        coverUrl = (album.getCoverPhoto() != null)
-                                ? album.getCoverPhoto().getImageUrl()
-                                : null;
-                    }
-
+                    String coverUrl = resolveCoverUrl(album);
                     return AlbumListResponse.of(album, coverUrl, photoCount);
                 })
                 .toList();
+    }
+
+    private String resolveCoverUrl(Album album) {
+        if ("즐겨찾기".equals(album.getTitle())) {
+            return albumPhotoRepository.findFirstByAlbumIdOrderByCreatedAtAsc(album.getId())
+                    .map(ap -> ap.getPhoto().getImageUrl())
+                    .orElse(null);
+        }
+        return (album.getCoverPhoto() != null)
+                ? album.getCoverPhoto().getImageUrl()
+                : null;
     }
 
     /**
@@ -359,6 +358,7 @@ public class PhotoService {
                 );
             }
         }
+        album.renewTimestamp();
         return responses;
     }
 
@@ -448,5 +448,6 @@ public class PhotoService {
         }
 
         albumPhotoRepository.delete(albumPhoto);
+        albumPhoto.getAlbum().renewTimestamp();
     }
 }

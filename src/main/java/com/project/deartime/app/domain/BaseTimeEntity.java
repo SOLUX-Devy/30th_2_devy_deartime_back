@@ -17,4 +17,12 @@ public abstract class BaseTimeEntity {
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @org.springframework.data.annotation.LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    protected void updateTimeManually(LocalDateTime dateTime) {
+        this.updatedAt = dateTime;
+    }
 }

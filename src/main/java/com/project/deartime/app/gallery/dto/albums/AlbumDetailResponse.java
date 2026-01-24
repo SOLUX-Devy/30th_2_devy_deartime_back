@@ -9,7 +9,7 @@ public record AlbumDetailResponse(
         String title,
         String coverImageUrl,
         String ownerNickname,
-        LocalDateTime createdAt
+        LocalDateTime updatedAt
 ) {
     public static AlbumDetailResponse fromEntity(Album album) {
         return new AlbumDetailResponse(
@@ -20,7 +20,7 @@ public record AlbumDetailResponse(
                         ? album.getCoverPhoto().getImageUrl()
                         : null,
                 album.getUser().getNickname(),
-                album.getCreatedAt()
+                album.getUpdatedAt()
         );
     }
 }

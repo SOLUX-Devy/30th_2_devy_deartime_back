@@ -2,6 +2,8 @@ package com.project.deartime.app.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,5 +41,9 @@ public class Album extends BaseTimeEntity {
 
     public void updateCoverPhoto(Photo coverPhoto) {
         this.coverPhoto = coverPhoto;
+    }
+
+    public void renewTimestamp() {
+        this.updateTimeManually(LocalDateTime.now());
     }
 }
