@@ -25,15 +25,22 @@ public class FriendResponseDto {
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime requestedAt;
 
-    public static FriendResponseDto from(Friend friend) {
+    public static FriendResponseDto of(Friend friend, Long currentUserId) {
+        boolean isRequesterMe = friend.getUser().getId().equals(currentUserId);
+        var friendUser = isRequesterMe ? friend.getFriend() : friend.getUser();
+
         return FriendResponseDto.builder()
-                .userId(friend.getUser().getId())
-                .friendId(friend.getFriend().getId())
-                .friendNickname(friend.getFriend().getNickname())
-                .friendProfileImageUrl(friend.getFriend().getProfileImageUrl())
-                .friendBio(friend.getFriend().getBio())
+                .userId(currentUserId)
+                .friendId(friendUser.getId())
+                .friendNickname(friendUser.getNickname())
+                .friendProfileImageUrl(friendUser.getProfileImageUrl())
+                .friendBio(friendUser.getBio())
                 .status(friend.getStatus())
                 .requestedAt(friend.getRequestedAt())
                 .build();
+    }
+
+    public static FriendResponseDto from(Friend friend) {
+        return of(friend, friend.getUser().getId());
     }
 }

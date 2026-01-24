@@ -142,7 +142,7 @@ public class FriendService {
                         log.error("[FRIEND] 친구 자동 수락 알림 발송 실패. userId={}, friendId={}", userId, friendId, e);
                     }
 
-                    return FriendResponseDto.from(savedFriend);
+                    return FriendResponseDto.of(savedFriend, userId);
                 }
 
                 // 내가 이미 요청을 보낸 경우
@@ -170,7 +170,7 @@ public class FriendService {
             log.error("[FRIEND] 친구 요청 알림 발송 실패. userId={}, friendId={}", userId, friendId, e);
         }
 
-        return FriendResponseDto.from(savedFriend);
+        return FriendResponseDto.of(savedFriend, userId);
     }
 
     /**
@@ -211,7 +211,7 @@ public class FriendService {
             log.error("[FRIEND] 친구 수락 알림 발송 실패. userId={}, friendId={}", userId, friendId, e);
         }
 
-        return FriendResponseDto.from(savedFriend);
+        return FriendResponseDto.of(savedFriend, userId);
     }
 
     /**
