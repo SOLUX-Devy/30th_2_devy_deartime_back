@@ -158,4 +158,23 @@ public class PhotoController {
                 null
         );
     }
+
+    /**
+     * 사진 즐겨찾기 토글
+     * POST /api/photos/{photoId}/favorite
+     */
+    @PostMapping("/api/photos/{photoId}/favorite")
+    public ResponseEntity<ApiResponseTemplete<Boolean>> toggleFavorite(
+            @AuthenticationPrincipal String userId,
+            @PathVariable Long photoId
+    ) {
+        Long myId = Long.parseLong(userId);
+        boolean isFavorite = photoService.toggleFavorite(myId, photoId);
+
+        SuccessCode successCode = isFavorite
+                ? SuccessCode.PHOTO_FAVORITE_ADD_SUCCESS
+                : SuccessCode.PHOTO_FAVORITE_REMOVE_SUCCESS;
+
+        return ApiResponseTemplete.success(successCode, isFavorite);
+    }
 }

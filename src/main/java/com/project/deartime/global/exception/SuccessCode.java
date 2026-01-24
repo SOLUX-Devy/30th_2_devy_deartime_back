@@ -37,6 +37,8 @@ public enum SuccessCode {
     ALBUM_PHOTO_REMOVE_SUCCESS(HttpStatus.NO_CONTENT, "앨범에서 사진 제거가 성공적으로 완료되었습니다."),
     FRIEND_REQUEST_SUCCESS(HttpStatus.CREATED, "친구 요청을 보냈습니다."),
     SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),
+    PHOTO_FAVORITE_ADD_SUCCESS(HttpStatus.CREATED, "사진 즐겨찾기 추가 성공"),
+    PHOTO_FAVORITE_REMOVE_SUCCESS(HttpStatus.NO_CONTENT, "사진 즐겨찾기 제거 성공"),
 
     // Server
     USER_INFO_RETRIEVED(HttpStatus.OK, "조회 성공"),

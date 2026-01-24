@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AlbumRepository extends JpaRepository<Album, Long> {
@@ -16,4 +17,8 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
     @Modifying
     @Query("update Album a set a.coverPhoto = null where a.coverPhoto.id = :photoId")
     void clearCoverPhoto(@Param("photoId") Long photoId);
+
+    Optional<Album> findFirstByTitleAndUserIdOrderByCreatedAtAsc(String title, Long userId);
+
+    List<Album> findAllByUserId(Long userId);
 }

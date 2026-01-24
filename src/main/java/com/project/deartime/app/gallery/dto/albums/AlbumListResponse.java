@@ -8,17 +8,17 @@ public record AlbumListResponse(
         Long userId,
         String title,
         String coverImageUrl,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        int photoCount
 ) {
-    public static AlbumListResponse fromEntity(Album album) {
+    public static AlbumListResponse of(Album album, String coverImageUrl, int photoCount) {
         return new AlbumListResponse(
                 album.getId(),
                 album.getUser().getId(),
                 album.getTitle(),
-                album.getCoverPhoto() != null
-                        ? album.getCoverPhoto().getImageUrl()
-                        : null,
-                album.getCreatedAt()
+                coverImageUrl,
+                album.getCreatedAt(),
+                photoCount
         );
     }
 }

@@ -33,4 +33,6 @@ public interface AlbumPhotoRepository extends JpaRepository<AlbumPhoto, AlbumPho
     void deleteByAlbumId(Long albumId);
 
     void deleteByPhotoId(Long photoId);
+
+    Optional<AlbumPhoto> findFirstByAlbumIdOrderByCreatedAtAsc(Long albumId);
 }

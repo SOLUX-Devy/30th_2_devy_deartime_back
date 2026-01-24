@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -130,10 +132,21 @@ public class PhotoService {
      */
     @Transactional(readOnly = true)
     public PageResponse<PhotoListResponse> getPhotos(Long userId, Pageable pageable) {
-        Page<Photo> photoPage =
-                photoRepository.findByUserId(userId, pageable);
+        Album favoriteAlbum = getOrCreateFavoriteAlbum(userId);
 
-        return PageResponse.from(photoPage.map(PhotoListResponse::fromEntity));
+        Set<Long> favoritePhotoIds = albumPhotoRepository.findByAlbumId(favoriteAlbum.getId())
+                .stream()
+                .map(ap -> ap.getPhoto().getId())
+                .collect(Collectors.toSet());
+
+        Page<Photo> photoPage = photoRepository.findAllByUserId(userId, pageable);
+
+        return PageResponse.from(
+                photoPage.map(photo -> PhotoListResponse.of(
+                        photo,
+                        favoritePhotoIds.contains(photo.getId())
+                ))
+        );
     }
 
     /**
@@ -238,10 +251,28 @@ public class PhotoService {
      */
     @Transactional(readOnly = true)
     public List<AlbumListResponse> getAlbums(Long userId) {
-        return albumRepository.findByUserIdOrderByCreatedAtDesc(userId)
-                .stream()
-                .map(AlbumListResponse::fromEntity)
-                .collect(Collectors.toList());
+        List<Album> albums = albumRepository.findAllByUserId(userId);
+
+        return albums.stream()
+                .map(album -> {
+                    String coverUrl;
+                    int photoCount = album.getAlbumPhotos().size();
+
+                    if ("즐겨찾기".equals(album.getTitle())) {
+                        coverUrl = albumPhotoRepository.findFirstByAlbumIdOrderByCreatedAtAsc(album.getId())
+                                .map(ap -> ap.getPhoto().getImageUrl())
+                                .orElse(null);
+                    }
+
+                    else {
+                        coverUrl = (album.getCoverPhoto() != null)
+                                ? album.getCoverPhoto().getImageUrl()
+                                : null;
+                    }
+
+                    return AlbumListResponse.of(album, coverUrl, photoCount);
+                })
+                .toList();
     }
 
     /**
@@ -332,6 +363,48 @@ public class PhotoService {
     }
 
     /**
+     * 즐겨찾기 앨범 조회 or 생성
+     */
+    private Album getOrCreateFavoriteAlbum(Long userId) {
+        return albumRepository.findFirstByTitleAndUserIdOrderByCreatedAtAsc("즐겨찾기", userId)
+                .orElseGet(() -> {
+                    User user = userRepository.findById(userId)
+                            .orElseThrow(() -> new CoreApiException(ErrorCode.USER_NOT_FOUND));
+
+                    Album newFavoriteAlbum = Album.builder()
+                            .title("즐겨찾기")
+                            .user(user)
+                            .build();
+                    return albumRepository.save(newFavoriteAlbum);
+                });
+    }
+
+    /**
+     * 사진 즐겨찾기 설정/해제
+     */
+    @Transactional
+    public boolean toggleFavorite(Long userId, Long photoId) {
+        Album favoriteAlbum = getOrCreateFavoriteAlbum(userId);
+
+        Photo photo = photoRepository.findById(photoId)
+                .orElseThrow(() -> new CoreApiException(ErrorCode.RESOURCE_NOT_FOUND, "사진을 찾을 수 없습니다."));
+
+        Optional<AlbumPhoto> albumPhotoOpt = albumPhotoRepository.findByAlbumIdAndPhotoId(favoriteAlbum.getId(), photoId);
+
+        if (albumPhotoOpt.isPresent()) {
+            albumPhotoRepository.delete(albumPhotoOpt.get());
+            return false;
+        } else {
+            AlbumPhoto newRelation = AlbumPhoto.builder()
+                    .album(favoriteAlbum)
+                    .photo(photo)
+                    .build();
+            albumPhotoRepository.save(newRelation);
+            return true;
+        }
+    }
+
+    /**
      * 앨범 내 사진 조회
      */
     @Transactional(readOnly = true)
@@ -344,9 +417,20 @@ public class PhotoService {
             throw new AccessDeniedException("조회 권한이 없습니다.");
         }
 
+        Album favoriteAlbum = getOrCreateFavoriteAlbum(userId);
+
+        Set<Long> favoritePhotoIds = albumPhotoRepository.findByAlbumId(favoriteAlbum.getId())
+                .stream()
+                .map(ap -> ap.getPhoto().getId())
+                .collect(Collectors.toSet());
+
+        Page<Photo> photoPage = albumPhotoRepository.findPhotosByAlbumId(albumId, pageable);
+
         return PageResponse.from(
-                albumPhotoRepository.findPhotosByAlbumId(albumId, pageable)
-                        .map(PhotoListResponse::fromEntity)
+                photoPage.map(photo -> PhotoListResponse.of(
+                        photo,
+                        favoritePhotoIds.contains(photo.getId())
+                ))
         );
     }
 
